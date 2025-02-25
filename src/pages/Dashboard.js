@@ -80,7 +80,7 @@ function Dashboard() {
   };
 
   const handleCreateClass = async () => {
-    const { name, course, course_code } = newClass;
+    const { name, course, course_code,start_date,end_date } = newClass;
 
     if (!name || !course || !course_code) {
       setError('Please fill in all fields.');
@@ -96,7 +96,7 @@ function Dashboard() {
 
       const response = await axios.post(
         'http://127.0.0.1:8000/classroom',
-        { name, course, course_code },
+        { name, course, course_code,start_date,end_date },
         {
           headers: {
             accessToken: token,
@@ -201,50 +201,65 @@ function Dashboard() {
 
       {/* Create Modal */}
       {isCreateModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg w-[400px] p-6">
-            <h2 className="text-xl font-semibold mb-4 text-left">Create a Classroom</h2>
-            <input
-              type="text"
-              value={newClass.name}
-              onChange={(e) => setNewClass({ ...newClass, name: e.target.value })}
-              className="w-full px-4 py-2 border border-black rounded-md mb-4 focus:outline-none"
-              placeholder="Enter classroom name"
-            />
-            <input
-              type="text"
-              value={newClass.course}
-              onChange={(e) => setNewClass({ ...newClass, course: e.target.value })}
-              className="w-full px-4 py-2 border border-black rounded-md mb-4 focus:outline-none"
-              placeholder="Enter course name"
-            />
-            <input
-              type="text"
-              value={newClass.course_code}
-              onChange={(e) =>
-                setNewClass({ ...newClass, course_code: e.target.value })
-              }
-              className="w-full px-4 py-2 border border-black rounded-md mb-4 focus:outline-none"
-              placeholder="Enter course code"
-            />
-            {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => setIsCreateModalOpen(false)}
-                className="bg-gray-300 text-black py-2 px-4 rounded-md hover:bg-gray-400"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleCreateClass}
-                className="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600"
-              >
-                Create
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="bg-white rounded-lg shadow-lg w-[400px] p-6">
+      <h2 className="text-xl font-semibold mb-4 text-left">Create a Classroom</h2>
+      <input
+        type="text"
+        value={newClass.name}
+        onChange={(e) => setNewClass({ ...newClass, name: e.target.value })}
+        className="w-full px-4 py-2 border border-black rounded-md mb-4 focus:outline-none"
+        placeholder="Enter classroom name"
+      />
+      <input
+        type="text"
+        value={newClass.course}
+        onChange={(e) => setNewClass({ ...newClass, course: e.target.value })}
+        className="w-full px-4 py-2 border border-black rounded-md mb-4 focus:outline-none"
+        placeholder="Enter course name"
+      />
+      <input
+        type="text"
+        value={newClass.course_code}
+        onChange={(e) =>
+          setNewClass({ ...newClass, course_code: e.target.value })
+        }
+        className="w-full px-4 py-2 border border-black rounded-md mb-4 focus:outline-none"
+        placeholder="Enter course code"
+      />
+      <input
+        type="date"
+        value={newClass.start_date}
+        onChange={(e) => setNewClass({ ...newClass, start_date: e.target.value })}
+        className="w-full px-4 py-2 border border-black rounded-md mb-4 focus:outline-none"
+        placeholder="Select start date"
+      />
+      <input
+        type="date"
+        value={newClass.end_date}
+        onChange={(e) => setNewClass({ ...newClass, end_date: e.target.value })}
+        className="w-full px-4 py-2 border border-black rounded-md mb-4 focus:outline-none"
+        placeholder="Select end date"
+      />
+      {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+      <div className="flex justify-end space-x-4">
+        <button
+          onClick={() => setIsCreateModalOpen(false)}
+          className="bg-gray-300 text-black py-2 px-4 rounded-md hover:bg-gray-400"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleCreateClass}
+          className="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600"
+        >
+          Create
+        </button>
+      </div>
+    </div>
+  </div>
+)
+}
     </div>
   );
 }

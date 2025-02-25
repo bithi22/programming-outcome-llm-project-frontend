@@ -151,10 +151,11 @@ function Classroom() {
                   <th className="px-4 py-2 border">Description</th>
                   <th className="px-4 py-2 border">Cognitive Domains</th>
                   <th className="px-4 py-2 border">PO's</th>
+                  <th className="px-4 py-2 border">Weight</th>
                 </tr>
               </thead>
               <tbody>
-                {classroomDetails?.co_po_table
+              {classroomDetails?.co_po_table
                   ? Object.entries(classroomDetails.co_po_table).map(
                       ([co, details], index) => (
                         <tr key={index}>
@@ -163,24 +164,13 @@ function Classroom() {
                             {details.description || 'No description provided'}
                           </td>
                           <td className="px-4 py-2 border">
-                            {details['Cognitive Domains in Bloom\'s Taxonomy']
-                              ? details['Cognitive Domains in Bloom\'s Taxonomy']
-                                  .map((domain) =>
-                                    Object.entries(domain)
-                                      .map(([key, value]) => `${key}: ${value}`)
-                                      .join(', ')
-                                  )
-                                  .join('; ')
-                              : 'No domains provided'}
+                            {details['Cognitive Domain'] || 'No domain provided'}
                           </td>
                           <td className="px-4 py-2 border">
-                            {details.POs
-                              ? details.POs.map((po) =>
-                                  Object.entries(po)
-                                    .map(([key, value]) => `${key}: ${value}`)
-                                    .join(', ')
-                                ).join('; ')
-                              : 'No PO data provided'}
+                            {details['PO'] || 'No PO data provided'}
+                          </td>
+                          <td className="px-4 py-2 border">
+                            {details['weight'] || 'No weight data provided'}
                           </td>
                         </tr>
                       )

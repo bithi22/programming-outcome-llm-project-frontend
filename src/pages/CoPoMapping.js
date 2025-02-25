@@ -11,6 +11,8 @@ function CoPoMapping() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  console.log(copoData)
+
   const handleInputChange = (currentCo, field, value) => {
     setCopoMapping((prev) => {
       const updated = { ...prev };
@@ -107,48 +109,26 @@ function CoPoMapping() {
                 </td>
                 <td className="px-4 py-2 border">
                   <textarea
-                    value={
-                      details?.["Cognitive Domains in Bloom's Taxonomy"]?.map((domain) =>
-                        Object.entries(domain)
-                          .map(([key, value]) => `${key}: ${value}`)
-                          .join(', ')
-                      ).join('; ') || ''
-                    }
-                    onChange={(e) =>
-                      handleInputChange(
-                        co,
-                        "Cognitive Domains in Bloom's Taxonomy",
-                        e.target.value.split(';').map((item) => {
-                          const [key, value] = item.split(':').map((v) => v.trim());
-                          return { [key]: parseFloat(value) };
-                        })
-                      )
-                    }
+                    value={details?.PO || ''}
+                    onChange={(e) => handleInputChange(co, 'PO', e.target.value)}
                     className="w-full border p-2 rounded focus:outline-none"
                   />
                 </td>
                 <td className="px-4 py-2 border">
                   <textarea
-                    value={
-                      details?.POs?.map((po) =>
-                        Object.entries(po)
-                          .map(([key, value]) => `${key}: ${value}`)
-                          .join(', ')
-                      ).join('; ') || ''
-                    }
-                    onChange={(e) =>
-                      handleInputChange(
-                        co,
-                        'POs',
-                        e.target.value.split(';').map((item) => {
-                          const [key, value] = item.split(':').map((v) => v.trim());
-                          return { [key]: parseFloat(value) };
-                        })
-                      )
-                    }
+                    value={details?.["Cognitive Domain"] || ''}
+                    onChange={(e) => handleInputChange(co, 'Cognitive Domain', e.target.value)}
                     className="w-full border p-2 rounded focus:outline-none"
                   />
                 </td>
+                <td className="px-4 py-2 border">
+                  <textarea
+                    value={details?.weight || ''}
+                    onChange={(e) => handleInputChange(co, 'weight', e.target.value)}
+                    className="w-full border p-2 rounded focus:outline-none"
+                  />
+                </td>
+                
               </tr>
             ))}
           </tbody>

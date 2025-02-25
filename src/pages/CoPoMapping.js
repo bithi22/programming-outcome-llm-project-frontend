@@ -15,7 +15,6 @@ function CoPoMapping() {
     setCopoMapping((prev) => {
       const updated = { ...prev };
 
-      // Handle CO renaming
       if (field === 'CO') {
         const newCo = value.trim();
 
@@ -64,7 +63,6 @@ function CoPoMapping() {
       );
 
       if (response.status === 201) {
-        
         navigate('/classroom', { state: { classroom_id: classroom_id } });
       }
     } catch (err) {
@@ -83,8 +81,8 @@ function CoPoMapping() {
             <tr>
               <th className="px-4 py-2 border">CO</th>
               <th className="px-4 py-2 border">Description</th>
-              <th className="px-4 py-2 border">Cognitive Domains</th>
-              <th className="px-4 py-2 border">POs</th>
+              <th className="px-4 py-2 border">Cognitive Domain</th>
+              <th className="px-4 py-2 border">PO</th>
             </tr>
           </thead>
           <tbody>
@@ -106,46 +104,18 @@ function CoPoMapping() {
                   />
                 </td>
                 <td className="px-4 py-2 border">
-                  <textarea
-                    value={
-                      details?.["Cognitive Domains in Bloom's Taxonomy"]?.map((domain) =>
-                        Object.entries(domain)
-                          .map(([key, value]) => `${key}: ${value}`)
-                          .join(', ')
-                      ).join('; ') || ''
-                    }
-                    onChange={(e) =>
-                      handleInputChange(
-                        co,
-                        "Cognitive Domains in Bloom's Taxonomy",
-                        e.target.value.split(';').map((item) => {
-                          const [key, value] = item.split(':').map((v) => v.trim());
-                          return { [key]: parseFloat(value) };
-                        })
-                      )
-                    }
+                  <input
+                    type="text"
+                    value={details?.['Cognitive Domain'] || ''}
+                    onChange={(e) => handleInputChange(co, 'Cognitive Domain', e.target.value)}
                     className="w-full border p-2 rounded focus:outline-none"
                   />
                 </td>
                 <td className="px-4 py-2 border">
-                  <textarea
-                    value={
-                      details?.POs?.map((po) =>
-                        Object.entries(po)
-                          .map(([key, value]) => `${key}: ${value}`)
-                          .join(', ')
-                      ).join('; ') || ''
-                    }
-                    onChange={(e) =>
-                      handleInputChange(
-                        co,
-                        'POs',
-                        e.target.value.split(';').map((item) => {
-                          const [key, value] = item.split(':').map((v) => v.trim());
-                          return { [key]: parseFloat(value) };
-                        })
-                      )
-                    }
+                  <input
+                    type="text"
+                    value={details?.PO || ''}
+                    onChange={(e) => handleInputChange(co, 'PO', e.target.value)}
                     className="w-full border p-2 rounded focus:outline-none"
                   />
                 </td>

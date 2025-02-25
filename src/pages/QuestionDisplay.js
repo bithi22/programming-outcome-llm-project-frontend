@@ -21,6 +21,7 @@ function QuestionDisplay() {
   const actionButton = { label: 'Logout', path: '/logout' };
 
   useEffect(() => {
+    console.log(classroom_id,question_id)
     if (!classroom_id || !question_id) {
       setError('Classroom ID or Question ID not provided.');
       return;

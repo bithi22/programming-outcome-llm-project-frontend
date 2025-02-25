@@ -54,14 +54,43 @@ function QuestionBuilder() {
   };
 
   const addSubsection = (id) => {
-    const updateSections = (sections) =>
+    const toRoman = (num) => {
+      const romanNumerals = [
+        ["M", 1000],
+        ["CM", 900],
+        ["D", 500],
+        ["CD", 400],
+        ["C", 100],
+        ["XC", 90],
+        ["L", 50],
+        ["XL", 40],
+        ["X", 10],
+        ["IX", 9],
+        ["V", 5],
+        ["IV", 4],
+        ["I", 1],
+      ];
+      let result = "";
+      for (const [roman, value] of romanNumerals) {
+        while (num >= value) {
+          result += roman;
+          num -= value;
+        }
+      }
+      return result.toLowerCase();
+    };
+  
+    const updateSections = (sections, depth = 1) =>
       sections.map((section) => {
         if (section.id === id) {
-          const nextSubsectionNumber = String.fromCharCode(
-            97 + section.subsections.length // ASCII value of 'a' is 97
-          );
+          const nextSubsectionNumber =
+            depth === 1
+              ? String.fromCharCode(97 + section.subsections.length) // 'a', 'b', 'c', etc.
+              : toRoman(section.subsections.length + 1); // 'i', 'ii', 'iii', etc.
+  
           return {
             ...section,
+            marks: '', // Clear marks field when a subsection is added
             subsections: [
               ...section.subsections,
               {
@@ -74,14 +103,16 @@ function QuestionBuilder() {
             ],
           };
         }
+  
         return {
           ...section,
-          subsections: updateSections(section.subsections),
+          subsections: updateSections(section.subsections, depth + 1),
         };
       });
-
+  
     setQuestions((prev) => updateSections(prev));
   };
+  
 
   const deleteSection = (id) => {
     const removeSection = (sections) =>
@@ -120,40 +151,44 @@ function QuestionBuilder() {
       alert('No questions to map!');
       return;
     }
-
-    const createHierarchy = (sections) => {
+  
+    const createHierarchy = (sections, depth = 1) => {
       const obj = {};
       sections.forEach((section) => {
-        const hasSubsections = section.subsections.length > 0;
+        const hasSubsections = section.subsections && section.subsections.length > 0;
         const entry = {
           description: section.text,
         };
-
+  
         if (hasSubsections) {
-          entry['sub-sections'] = createHierarchy(section.subsections);
+          // Use "sub-sub-sections" at the third level, otherwise "sub-sections"
+          const subsectionKey = depth === 2 ? 'sub-sub-sections' : 'sub-sections';
+          entry[subsectionKey] = createHierarchy(section.subsections, depth + 1);
         } else {
-          entry.marks = section.marks === null ? 0 : parseFloat(section.marks);
+          // Ensure marks are present for leaf nodes
+          entry.marks = section.marks !== undefined ? parseInt(section.marks, 10) || 0 : 0;
         }
-
+  
         obj[section.number] = entry;
       });
       return obj;
     };
-
+  
     const questionData = {
-      classroom_id,
-      questionName: popup.questionName,
-      questionWeight: popup.questionWeight,
       data: createHierarchy(questions),
     };
-
+  
     console.log('Generated Question Data:', JSON.stringify(questionData, null, 2));
-
+  
     navigate('/questioncopomapping', {
-      state: { classroom_id, questionData },
+      state: { classroom_id, questionData,
+        questionName: popup.questionName,
+        questionWeight: popup.questionWeight,
+       },
     });
   };
-
+  
+  
   const renderPopup = () => {
     if (!popup.show) return null;
 
@@ -204,13 +239,15 @@ function QuestionBuilder() {
             className="border p-2 w-1/2 rounded"
             placeholder="Enter question"
           />
-          <input
-            type="text"
-            value={section.marks}
-            onChange={(e) => handleMarksChange(section.id, e.target.value)}
-            className="border p-2 w-20 rounded"
-            placeholder="Marks"
-          />
+          {section.subsections.length === 0 && ( // Show marks only if no subsections
+            <input
+              type="text"
+              value={section.marks}
+              onChange={(e) => handleMarksChange(section.id, e.target.value)}
+              className="border p-2 w-20 rounded"
+              placeholder="Marks"
+            />
+          )}
           <button
             onClick={() => addSubsection(section.id)}
             className="bg-green-500 text-white px-4 py-1 rounded"
@@ -230,6 +267,7 @@ function QuestionBuilder() {
       </div>
     ));
   };
+  
 
   return (
     <div>

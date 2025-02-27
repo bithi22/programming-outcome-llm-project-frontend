@@ -23,8 +23,7 @@
 //     { label: 'Generate Report', path: '/generatereport' },
 //   ];
 //   const actionButton = { label: 'Logout', path: '/logout' };
-  
-  
+
 //   const downloadXLSX = () => {
 //     // Build a header matrix from hierarchical headers.
 //     const headerRowCount = headers.length;
@@ -32,10 +31,10 @@
 //     const headerMatrix = Array.from({ length: headerRowCount }, () =>
 //       Array(totalColumns).fill("")
 //     );
-  
+
 //     // Collect merge ranges for cells with colSpan/rowSpan > 1.
 //     const merges = [];
-  
+
 //     // Iterate over each header row from our hierarchical headers.
 //     headers.forEach((row, rowIndex) => {
 //       let colIndex = 0;
@@ -46,7 +45,7 @@
 //         }
 //         // Place the header label.
 //         headerMatrix[rowIndex][colIndex] = cell.label;
-  
+
 //         // Determine span values.
 //         const colSpan = cell.colSpan || 1;
 //         const rowSpan = cell.rowSpan || 1;
@@ -68,22 +67,22 @@
 //         colIndex += colSpan;
 //       });
 //     });
-  
+
 //     // Combine header rows and data rows.
 //     const sheetData = [...headerMatrix, ...data];
-  
+
 //     // Create worksheet from the array-of-arrays.
 //     const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
 //     // Apply the merges.
 //     worksheet["!merges"] = merges;
-  
+
 //     // Create a new workbook and append the worksheet.
 //     const workbook = XLSX.utils.book_new();
 //     XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-  
+
 //     // Write the workbook to a binary array.
 //     const workbookBinary = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-  
+
 //     // Trigger file download using file-saver.
 //     saveAs(
 //       new Blob([workbookBinary], {
@@ -92,28 +91,27 @@
 //       "report.xlsx"
 //     );
 //   };
-  
 
 //   useEffect(() => {
 //     if (!question) {
 //       console.error('Question details or current record not provided.');
 //       return;
 //     }
-  
+
 //     const { current_record, co_po_mapping } = question;
-  
+
 //     let maxRow = 0
 //     let t_columns = 1
 
 //     // Build hierarchical headers from co_po_mapping and append marks to lowest-level headers
 //     const buildHeaders = (mapping) => {
 //       const headerLevels = [];
-  
+
 //       const getMaxRows = (key,value)=>{
 
 //         if(value['sub-sections']){
 //           maxRow = Math.max(1,maxRow)
-          
+
 //           Object.entries(value['sub-sections']).forEach(([sub_key,sub_value])=>{
 //             getMaxRows(sub_key,sub_value)
 //           })
@@ -121,19 +119,18 @@
 //         else if(value['sub-sub-sections']){
 //           maxRow = Math.max(2,maxRow)
 //         }
-        
+
 //       }
 
 //       Object.entries(mapping).forEach(([key,value]) => {
 //         getMaxRows(key,value)
 //       })
 
-
 //       const co_po_dfs = (key,value,level,parentLabel)=>{
 //         if (!headerLevels[level]) headerLevels[level] = [];
 
 //         let label = parentLabel ? `${key}` : key;
-  
+
 //         // If this node has a "marks" key, append marks to the label
 //         if (value.marks !== undefined) {
 //           label = `${key} (${value.marks})`;
@@ -169,7 +166,7 @@
 //       })
 //       return headerLevels;
 //     };
-  
+
 //     const hierarchicalHeaders = buildHeaders(co_po_mapping);
 //     // After you compute hierarchicalHeaders and maxRow:
 //     if (hierarchicalHeaders.length > 0) {
@@ -181,7 +178,7 @@
 //     }
 //     setTotalColumns(t_columns)
 //     setHeaders(hierarchicalHeaders);
-  
+
 //     // Function to transform current_record into row-wise data for the table
 //     const transformData = (record) => {
 //       if(record==null){
@@ -189,7 +186,7 @@
 //       }
 //       return Object.entries(record).map(([studentId, studentData]) => {
 //         let row = [studentId]; // First column is the student ID
-  
+
 //         // Flatten the nested structure
 //         Object.entries(studentData).forEach(([questionId, questionData]) => {
 //           if (questionData['sub-sections']) {
@@ -199,16 +196,14 @@
 //             });
 //           }
 //         });
-  
+
 //         return row;
 //       });
 //     };
-  
+
 //     const initialData = transformData(current_record);
 //     setData(initialData);
 //   }, [question]);
-
-  
 
 //   const handleCellChange = (rowIndex, colIndex, value) => {
 //     const updatedData = [...data];
@@ -262,10 +257,10 @@
 //     //   console.error('Error saving record:', error);
 //     // }
 
-//     return 
+//     return
 //   };
 
-//   const generateResult = async () => {
+//   const publishResult = async () => {
 //     const token = localStorage.getItem('accessToken');
 
 //     if (!token) {
@@ -313,7 +308,7 @@
 //             Save Record
 //           </button>
 //           <button
-//             onClick={generateResult}
+//             onClick={publishResult}
 //             className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600 ml-2"
 //           >
 //             Generate Result
@@ -345,7 +340,7 @@
 //                   />
 //                 </svg>
 //                 <span>Records have been saved successfully!</span>
-               
+
 //               </div>
 //             </div>
 //           </div>
@@ -370,7 +365,7 @@
 //                   />
 //                 </svg>
 //                 <span>Report Published!</span>
-               
+
 //               </div>
 //             </div>
 //           </div>
@@ -439,13 +434,12 @@
 
 // export default QuestionResult;
 
-
-import React, { useState, useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import axios from 'axios';
-import * as XLSX from 'xlsx';
-import { saveAs } from 'file-saver';
+import React, { useState, useEffect, useRef } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import axios from "axios";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 
 function QuestionResult() {
   const location = useLocation();
@@ -453,7 +447,7 @@ function QuestionResult() {
   const { question } = location.state || {};
   const { classroom_id } = location.state || {};
   const [headers, setHeaders] = useState([]);
-  const [popupMessage, setPopupMessage] = useState('');
+  const [popupMessage, setPopupMessage] = useState("");
   const [data, setData] = useState([]);
   const [popupVisible, setPopupVisible] = useState(false);
   const [totalColumns, setTotalColumns] = useState(0);
@@ -462,10 +456,10 @@ function QuestionResult() {
   const question_id = location.state?.question_id;
 
   const navItems = [
-    { label: 'Join Class', path: '/joinclass' },
-    { label: 'Generate Report', path: '/generatereport' },
+    { label: "Join Class", path: "/joinclass" },
+    { label: "Generate Report", path: "/generatereport" },
   ];
-  const actionButton = { label: 'Logout', path: '/logout' };
+  const actionButton = { label: "Logout", path: "/logout" };
 
   const downloadXLSX = () => {
     // Build a header matrix from hierarchical headers.
@@ -487,7 +481,7 @@ function QuestionResult() {
         if (colSpan > 1 || rowSpan > 1) {
           merges.push({
             s: { r: rowIndex, c: colIndex },
-            e: { r: rowIndex + rowSpan - 1, c: colIndex + colSpan - 1 }
+            e: { r: rowIndex + rowSpan - 1, c: colIndex + colSpan - 1 },
           });
           for (let i = rowIndex; i < rowIndex + rowSpan; i++) {
             for (let j = colIndex; j < colIndex + colSpan; j++) {
@@ -505,10 +499,13 @@ function QuestionResult() {
     worksheet["!merges"] = merges;
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
-    const workbookBinary = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+    const workbookBinary = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
     saveAs(
       new Blob([workbookBinary], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8"
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8",
       }),
       "report.xlsx"
     );
@@ -516,7 +513,7 @@ function QuestionResult() {
 
   useEffect(() => {
     if (!question) {
-      console.error('Question details or current record not provided.');
+      console.error("Question details or current record not provided.");
       return;
     }
 
@@ -529,12 +526,14 @@ function QuestionResult() {
       const headerLevels = [];
 
       const getMaxRows = (key, value) => {
-        if (value['sub-sections']) {
+        if (value["sub-sections"]) {
           maxRow = Math.max(1, maxRow);
-          Object.entries(value['sub-sections']).forEach(([sub_key, sub_value]) => {
-            getMaxRows(sub_key, sub_value);
-          });
-        } else if (value['sub-sub-sections']) {
+          Object.entries(value["sub-sections"]).forEach(
+            ([sub_key, sub_value]) => {
+              getMaxRows(sub_key, sub_value);
+            }
+          );
+        } else if (value["sub-sub-sections"]) {
           maxRow = Math.max(2, maxRow);
         }
       };
@@ -552,18 +551,22 @@ function QuestionResult() {
         headerLevels[level].push({ label, colSpan: 1, rowSpan: 1 });
         let currentIndex = headerLevels[level].length - 1;
 
-        if (value['sub-sections']) {
+        if (value["sub-sections"]) {
           let child_counter = 0;
-          Object.entries(value['sub-sections']).forEach(([sub_key, sub_value]) => {
-            child_counter += co_po_dfs(sub_key, sub_value, level + 1, label);
-          });
+          Object.entries(value["sub-sections"]).forEach(
+            ([sub_key, sub_value]) => {
+              child_counter += co_po_dfs(sub_key, sub_value, level + 1, label);
+            }
+          );
           headerLevels[level][currentIndex].colSpan = child_counter;
           return child_counter;
-        } else if (value['sub-sub-sections']) {
+        } else if (value["sub-sub-sections"]) {
           let child_counter = 0;
-          Object.entries(value['sub-sub-sections']).forEach(([sub_key, sub_value]) => {
-            child_counter += co_po_dfs(sub_key, sub_value, level + 1, label);
-          });
+          Object.entries(value["sub-sub-sections"]).forEach(
+            ([sub_key, sub_value]) => {
+              child_counter += co_po_dfs(sub_key, sub_value, level + 1, label);
+            }
+          );
           headerLevels[level][currentIndex].colSpan = child_counter;
           return child_counter;
         } else {
@@ -574,7 +577,7 @@ function QuestionResult() {
       };
 
       Object.entries(mapping).forEach(([key, value]) => {
-        co_po_dfs(key, value, 0, '');
+        co_po_dfs(key, value, 0, "");
       });
       return headerLevels;
     };
@@ -582,9 +585,9 @@ function QuestionResult() {
     const hierarchicalHeaders = buildHeaders(co_po_mapping);
     if (hierarchicalHeaders.length > 0) {
       hierarchicalHeaders[0].unshift({
-        label: 'Student ID',
+        label: "Student ID",
         colSpan: 1,
-        rowSpan: maxRow + 1
+        rowSpan: maxRow + 1,
       });
     }
     setTotalColumns(t_columns);
@@ -597,10 +600,34 @@ function QuestionResult() {
       return Object.entries(record).map(([studentId, studentData]) => {
         let row = [studentId];
         Object.entries(studentData).forEach(([questionId, questionData]) => {
-          if (questionData['sub-sections']) {
-            Object.entries(questionData['sub-sections']).forEach(([subSection, subData]) => {
-              row.push(subData.obtained_marks !== undefined ? subData.obtained_marks : '');
-            });
+          if (questionData["sub-sections"]) {
+            Object.entries(questionData["sub-sections"]).forEach(
+              ([subSection, subData]) => {
+                if(subData['sub-sub-sections']){
+                  Object.entries(subData['sub-sub-sections']).forEach(([sub_sub_section,sub_sub_data])=>{
+                    row.push(
+                      sub_sub_data.obtained_marks !== undefined
+                        ? sub_sub_data.obtained_marks
+                        : ""
+                    );
+                  })
+                }
+                else{
+                  row.push(
+                    subData.obtained_marks !== undefined
+                      ? subData.obtained_marks
+                      : ""
+                  );
+                }
+              }
+            );
+          }
+          else{
+            row.push(
+              questionData.obtained_marks !== undefined
+                ? questionData.obtained_marks
+                : ""
+            )
           }
         });
         return row;
@@ -618,7 +645,7 @@ function QuestionResult() {
   };
 
   const addRow = () => {
-    const newRow = Array(totalColumns).fill('');
+    const newRow = Array(totalColumns).fill("");
     setData((prevData) => [...prevData, newRow]);
   };
 
@@ -627,77 +654,224 @@ function QuestionResult() {
     setData(updatedData);
   };
 
+  const getObtainedMarksMapping = ()=>{
+    const { co_po_mapping } = question;
+    if (data.length === 0) {
+      console.log("No student records");
+      return;
+    }
+
+    const marks_mapping = [];
+
+    const construct_marks_mapping = (key, value, current) => {
+      current.push(key);
+      if (value["sub-sections"]) {
+        Object.entries(value["sub-sections"]).forEach(
+          ([sub_key, sub_value]) => {
+            construct_marks_mapping(sub_key, sub_value, current);
+          }
+        );
+      } else if (value["sub-sub-sections"]) {
+        Object.entries(value["sub-sub-sections"]).forEach(
+          ([sub_key, sub_value]) => {
+            construct_marks_mapping(sub_key, sub_value, current);
+          }
+        );
+      } else {
+        marks_mapping.push(structuredClone(current));
+      }
+      current.pop();
+    };
+
+    Object.entries(co_po_mapping).forEach(([key, value]) => {
+      construct_marks_mapping(key, value, []);
+    });
+
+    const obtained_marks_mapping = {};
+    const total_students = data.length;
+
+    for (let i = 0; i < total_students; i++) {
+      const student_id = data[i][0];
+      const current = (obtained_marks_mapping[student_id] = {});
+      let counter = 1;
+
+      marks_mapping.forEach((value, index) => {
+        let first,
+          second,
+          third = -1;
+
+        for (let j = 0; j < value.length; j++) {
+          if (j === 0) {
+            first = value[j];
+            if (Object.hasOwn(current, first)) {
+            } else {
+              current[first] = {};
+            }
+          } else if (j === 1) {
+            second = value[j];
+            if (Object.hasOwn(current[first],'sub-sections')) {
+              if(Object.hasOwn(current[first]['sub-sections'],second)){
+
+              }
+              else{
+              current[first]['sub-sections'][second] = {};
+              }
+            } 
+            else {
+              current[first]['sub-sections'] = {}
+              current[first]['sub-sections'][second] = {};
+            }
+          } else {
+            third = value[j];
+            if (Object.hasOwn(current[first]['sub-sections'][second], 'sub-sub-sections')) {
+              if(Object.hasOwn(current[first]['sub-sections'][second]['sub-sub-sections'], third)){
+
+              }
+              else{
+                current[first]['sub-sections'][second]['sub-sub-sections'][third] = {};
+              }
+            } else {
+              current[first]['sub-sections'][second]['sub-sub-sections'] = {}
+              current[first]['sub-sections'][second]['sub-sub-sections'][third] = {};
+            }
+          }
+
+          if (j === value.length - 1) {
+            if (j === 0) {
+              current[first]["obtained_marks"] = data[i][counter];
+            } else if (j === 1) {
+              current[first]['sub-sections'][second]["obtained_marks"] = 
+                data[i][counter];
+            } else {
+              current[first]['sub-sections'][second]['sub-sub-sections'][third]["obtained_marks"] = data[i][counter];
+            }
+            counter += 1;
+          }
+        }
+      });
+    }
+    return obtained_marks_mapping
+  }
+
   const saveRecord = async () => {
-    // The saveRecord logic is currently commented out.
+    
+    const obtained_marks_mapping = getObtainedMarksMapping()
+    
+    const requestBody = {
+      current_record: obtained_marks_mapping,
+      question_id: question_id,
+    };
+    console.log("Record Saving", requestBody);
+    const token = localStorage.getItem("accessToken");
+
+    if (!token) {
+      console.error("Access token not found");
+      return;
+    }
+
+    try {
+      const response = await axios.put(
+        `http://127.0.0.1:8000/question/current-record`,
+        requestBody,
+        {
+          headers: {
+            accessToken: token,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        console.log("Setting popup visible");
+        setPopupVisible(true);
+        setTimeout(() => {
+          setPopupVisible(false);
+        }, 3000);
+      } else {
+        console.error("Failed to save record:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Error saving record:", error);
+    }
+
     return;
   };
 
-  const generateResult = async () => {
-    const token = localStorage.getItem('accessToken');
+  const publishResult = async () => {
+    const token = localStorage.getItem("accessToken");
     if (!token) {
-      console.error('Access token not found');
+      console.error("Access token not found");
       return;
     }
+
+    if(question.report_submitted){
+      return 
+    }
+
+    const obtained_marks_mapping = getObtainedMarksMapping()
+
     try {
       const response = await axios.put(
-        `http://127.0.0.1:8000/report/generate`,
-        { question_id },
+        `http://127.0.0.1:8000/report/publish`,
+        { question_id,
+          current_record : obtained_marks_mapping
+        },
         { headers: { accessToken: token } }
       );
-      if (response.status === 201) {
+      if (response.status === 200) {
         setPopupMessage(true);
+        question.report_submitted = true
         setTimeout(() => setPopupMessage(false), 3000);
       } else {
-        console.error('Failed to generate report:', response.statusText);
+        console.error("Failed to generate report:", response.statusText);
       }
     } catch (error) {
-      console.error('Error generating report:', error);
+      console.error("Error generating report:", error);
     }
   };
 
   const handleFileUpload = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-  
+
     const reader = new FileReader();
     reader.onload = (evt) => {
       const binaryStr = evt.target.result;
-      const workbook = XLSX.read(binaryStr, { type: 'binary' });
+      const workbook = XLSX.read(binaryStr, { type: "binary" });
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
-  
+
       // Convert the worksheet to a 2D array (array-of-arrays).
       const fileData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
-      
+
       // Number of header rows in your table (based on your hierarchical headers).
       const headerRowCount = headers.length || 0;
-  
+
       // 1) Remove the header rows from the data
       const dataRows = fileData.slice(headerRowCount);
-  
+
       // 2) Filter out rows that do NOT have a "Student ID" in the first column
       //    (i.e., skip rows where the first cell is empty/undefined).
       const filteredRows = dataRows.filter(
-        (row) => row[0] !== undefined && row[0] !== null && row[0] !== ''
+        (row) => row[0] !== undefined && row[0] !== null && row[0] !== ""
       );
-  
+
       // 4) Pad each row so all rows have the same number of columns,
       //    turning undefined cells into empty strings
       const finalData = filteredRows.map((row) => {
         const newRow = [];
         for (let i = 0; i < totalColumns; i++) {
-          newRow[i] = row[i] ?? '';
+          newRow[i] = row[i] ?? "";
         }
         return newRow;
       });
-  
+
       // 5) Update your table data and totalColumns (so the table can display all columns)
       setData(finalData);
     };
-  
+
     reader.readAsBinaryString(file);
   };
-  
+
   // Trigger the hidden file input.
   const triggerFileUpload = () => {
     if (fileInputRef.current) {
@@ -726,12 +900,20 @@ function QuestionResult() {
           >
             Save Record
           </button>
-          <button
-            onClick={generateResult}
+          {/* <button
+            onClick={publishResult}
             className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600 ml-2"
           >
-            Generate Result
-          </button>
+            Publish Result
+          </button> */}
+          {!question?.report_submitted && (
+                <button
+                    onClick={publishResult}
+                    className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600 ml-2"
+                >
+                    Publish Result
+                </button>
+            )}
           <button
             onClick={downloadXLSX}
             className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 ml-2"
@@ -749,7 +931,7 @@ function QuestionResult() {
             accept=".xlsx, .xls"
             ref={fileInputRef}
             onChange={handleFileUpload}
-            style={{ display: 'none' }}
+            style={{ display: "none" }}
           />
         </div>
         {/* Popup */}
@@ -822,7 +1004,10 @@ function QuestionResult() {
               {data.map((row, rowIndex) => (
                 <tr key={rowIndex}>
                   {row.map((cell, colIndex) => (
-                    <td key={colIndex} className="border border-gray-300 px-4 py-2">
+                    <td
+                      key={colIndex}
+                      className="border border-gray-300 px-4 py-2"
+                    >
                       <input
                         type="text"
                         value={cell}

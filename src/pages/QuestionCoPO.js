@@ -1,165 +1,198 @@
-import React, { useState, useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import Navbar from "../components/Navbar";
-import axios from "axios"
+import React, { useState, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import Navbar from '../components/Navbar';
 
 function QuestionCoPo() {
-  const [editableData, setEditableData] = useState([]);
-  const [error, setError] = useState("");
-
+  const [coPoMappings, setCoPoMappings] = useState([]);
+  const [questionDetails, setQuestionDetails] = useState(null);
+  const [error, setError] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
 
-  // ✅ Retrieve data from navigation state
-  const classroom_id = location.state?.classroom_id || null;
-  const questionName = location.state?.questionName || "Unknown Question";
-  const questionWeight = location.state?.weight || 0;
-  const coPoMapping = location.state?.coPoMapping || {};
-  const questionDescriptions = location.state?.questionDescriptions || {};
-  console.log("🚀 Received location.state:", location.state);
-  console.log("classroom_id:", classroom_id);
-  console.log("coPoMapping:", coPoMapping);
-  console.log("questionDescriptions:", questionDescriptions);
+  const classroom_id = location.state?.classroom_id;
+  const questionData = location.state?.questionData;
+  console.log('Question', questionData);
+  console.log('Classroom_id',classroom_id);
+
+  const navItems = [
+    { label: 'Join Class', path: '/joinclass' },
+    { label: 'Generate Report', path: '/generatereport' },
+  ];
+  const actionButton = { label: 'Logout', path: '/logout' };
 
   useEffect(() => {
-    if (!classroom_id || !coPoMapping || !questionDescriptions) {
-      console.error("❌ Missing Data Detected, Waiting for Updates...");
-      return; // Wait until data is available before proceeding
-    }
-  
-    console.log("✅ All required data is available:", { coPoMapping, questionDescriptions });
-  
-    const formattedData = Object.entries(coPoMapping).flatMap(([key, value]) => {
-      const mainDescription = questionDescriptions[key]?.description || "N/A";
-  
-      return Object.entries(value["sub-sections"] || {}).map(([subKey, subValue]) => ({
-        number: `${key}${subKey.toUpperCase()}`,
-        mainDescription,
-        subDescription: subValue.description || "N/A",
-        cognitiveDomain: subValue["Cognitive Domain"] || "",
-        PO: subValue["PO"] || "",
-        marks: subValue["marks"] || 0,
-      }));
-    });
-  
-    setEditableData(formattedData);
-  }, [classroom_id, coPoMapping, questionDescriptions]);
-  
-
-  const handleInputChange = (index, field, value) => {
-    setEditableData((prevData) =>
-      prevData.map((item, idx) =>
-        idx === index ? { ...item, [field]: field === "marks" ? parseInt(value, 10) : value } : item
-      )
-    );
-  };
-
-  const handleCreateQuestion = async () => {
-    if (!editableData.length) {
-      alert("No data to submit.");
+    if (!classroom_id || !questionData) {
+      setError('Classroom ID or Question Data not provided.');
       return;
     }
 
-    const requestBody = {
-      name: questionName,
-      co_po_mapping: coPoMapping,
-      classroom_id,
-      weight: parseFloat(questionWeight),
-      question_details: editableData,
-    };
+    setQuestionDetails(questionData);
 
+    
+  }, [classroom_id, questionData]);
+
+
+  const handleInputChange = (id, field, value) => {
+    if (field === 'description') {
+      // Update questionDetails for description changes
+      setQuestionDetails((prevDetails) => {
+        const updatedData = { ...prevDetails };
+        if (updatedData.data[id]) {
+          updatedData.data[id][field] = value;
+        }
+        return updatedData;
+      });
+    } else {
+      // Update coPoMappings for CO and marks changes
+      setCoPoMappings((prevMappings) =>
+        prevMappings.map((mapping) =>
+          mapping.id === id ? { ...mapping, [field]: value } : mapping
+        )
+      );
+    }
+  };
+
+  useEffect(() => {
+    console.log('Updated coPoMappings:', coPoMappings);
+  }, [coPoMappings]);
+
+  useEffect(() => {
+    console.log('Updated questionDetails:', questionDetails);
+  }, [questionDetails]);
+
+  const handleCreateQuestion = async () => {
+    console.log('Final CoPO', coPoMappings);
+    console.log('Final questionDetails', questionDetails);
     try {
-      const token = localStorage.getItem("accessToken");
+      const token = localStorage.getItem('accessToken');
       if (!token) {
-        alert("You are not logged in. Please log in first.");
+        setError('You are not logged in. Please log in first.');
         return;
       }
 
-      const response = await axios.post(`http://127.0.0.1:8000/question/`, requestBody, {
-        headers: { accessToken: token },
-      });
+      const weight = parseFloat(questionData.questionWeight);
+      if (isNaN(weight)) {
+        alert('Invalid weight value.');
+        return;
+      }
+
+      // Build the flat `co_po_mapping` object
+      const coPoMapping = coPoMappings.reduce((acc, item) => {
+        acc[item.id] = {
+          marks: parseInt(item.marks, 10) || 0,
+          CO: item.CO || '',
+        };
+        return acc;
+      }, {});
+
+      const requestBody = {
+        name: questionData.questionName,
+        co_po_mapping: coPoMapping,
+        classroom_id: classroom_id,
+        weight: weight,
+        question_details: questionDetails, // Send updated questionDetails
+      };
+
+      const response = await axios.post(
+        `http://127.0.0.1:8000/question`,
+        requestBody,
+        {
+          headers: {
+            accessToken: token,
+          },
+        }
+      );
 
       if (response.status === 201) {
-        const question_id = response.data[0]._id;
-        alert("Question created successfully!");
-        navigate("/questiondisplay", { state: { classroom_id, question_id } });
+        const questionId = response.data.data[0]._id;
+        alert('Question created successfully!');
+        navigate('/questiondisplay', {
+          state: { classroom_id, question_id: questionId },
+        });
       } else {
-        alert("Unexpected response from the server. Please try again.");
+        alert('Failed to create question. Please try again.');
       }
     } catch (error) {
-      alert(error.response?.data?.message || "Failed to create the question. Please try again.");
+      console.error('Error creating question:', error.response?.data || error.message);
+      alert('Failed to create a new question. Please try again.');
     }
   };
 
   if (error) {
-    return (
-      <div className="text-red-500 text-center mt-10">
-        {error} <br />
-        <button onClick={() => navigate(-1)} className="text-blue-500 underline">Go Back</button>
-      </div>
-    );
+    return <div className="text-red-500 text-center mt-10">{error}</div>;
+  }
+
+  if (!coPoMappings.length) {
+    return <div className="text-center mt-10">Loading CO-PO mappings...</div>;
   }
 
   return (
     <div>
       <Navbar
-        navItems={[
-          { label: "Join Class", path: "/joinclass" },
-          { label: "Generate Report", path: "/generatereport" },
-        ]}
-        actionButton={{ label: "Logout", path: "/logout" }}
+        navItems={navItems}
+        actionButton={actionButton}
+        buttonStyle="border border-red-500 text-red-500 py-2 px-4 rounded-md hover:bg-red-500 hover:text-white"
       />
       <div className="container mx-auto px-6 mt-24">
-        <h2 className="text-lg font-semibold mb-4">CO-PO Mappings</h2>
-        <button className="bg-blue-500 text-white px-4 py-2 mb-4 rounded" onClick={handleCreateQuestion}>
-          Create Question
-        </button>
-        <div className="overflow-x-auto">
-          <table className="table-auto w-full text-left border border-gray-300">
-            <thead className="bg-black text-white">
-              <tr>
-                <th className="px-4 py-2 border">Number</th>
-                <th className="px-4 py-2 border">Main Question Description</th>
-                <th className="px-4 py-2 border">Sub-section Description</th>
-                <th className="px-4 py-2 border">Cognitive Domain</th>
-                <th className="px-4 py-2 border">PO</th>
-                <th className="px-4 py-2 border">Marks</th>
-              </tr>
-            </thead>
-            <tbody>
-              {editableData.map((item, index) => (
-                <tr key={index} className="border">
-                  <td className="px-4 py-2 border">{item.number}</td>
-                  <td className="px-4 py-2 border">{item.mainDescription}</td>
-                  <td className="px-4 py-2 border">{item.subDescription}</td>
-                  <td className="px-4 py-2 border">
-                    <input
-                      type="text"
-                      className="w-full border px-2 py-1"
-                      value={item.cognitiveDomain}
-                      onChange={(e) => handleInputChange(index, "cognitiveDomain", e.target.value)}
-                    />
-                  </td>
-                  <td className="px-4 py-2 border">
-                    <input
-                      type="text"
-                      className="w-full border px-2 py-1"
-                      value={item.PO}
-                      onChange={(e) => handleInputChange(index, "PO", e.target.value)}
-                    />
-                  </td>
-                  <td className="px-4 py-2 border">
-                    <input
-                      type="number"
-                      className="w-full border px-2 py-1"
-                      value={item.marks}
-                      onChange={(e) => handleInputChange(index, "marks", e.target.value)}
-                    />
-                  </td>
+        <div>
+          <h2 className="text-lg font-semibold mb-4">CO-PO Mappings</h2>
+          <button
+            onClick={handleCreateQuestion}
+            className="bg-blue-500 text-white px-4 py-2 mb-4 rounded-md hover:bg-blue-600"
+          >
+            Create Question
+          </button>
+          <div className="overflow-x-auto">
+            <table className="table-auto w-full text-left border border-gray-300">
+              <thead className="bg-black text-white">
+                <tr>
+                  <th className="px-4 py-2 border">Question Description</th>
+                  <th className="px-4 py-2 border">Mapped CO</th>
+                  <th className="px-4 py-2 border">Marks</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {coPoMappings.map((item) => (
+                  <tr key={item.id}>
+                    <td className="px-4 py-2 border">
+                      <input
+                        type="text"
+                        value={questionDetails.data[item.id]?.description || ''}
+                        onChange={(e) =>
+                          handleInputChange(item.id, 'description', e.target.value)
+                        }
+                        className="border p-2 rounded w-full"
+                        placeholder="Enter question description"
+                      />
+                    </td>
+                    <td className="px-4 py-2 border">
+                      <input
+                        type="text"
+                        value={item.CO}
+                        onChange={(e) =>
+                          handleInputChange(item.id, 'CO', e.target.value)
+                        }
+                        className="border p-2 rounded w-full"
+                        placeholder="Enter CO"
+                      />
+                    </td>
+                    <td className="px-4 py-2 border">
+                      <input
+                        type="number"
+                        value={item.marks}
+                        onChange={(e) =>
+                          handleInputChange(item.id, 'marks', e.target.value)
+                        }
+                        className="border p-2 rounded w-full"
+                        placeholder="Enter marks"
+                      />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

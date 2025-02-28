@@ -152,10 +152,11 @@ function Classroom() {
                   <th className="px-4 py-2 border">Description</th>
                   <th className="px-4 py-2 border">Cognitive Domains</th>
                   <th className="px-4 py-2 border">PO's</th>
+                  <th className="px-4 py-2 border">Weight</th>
                 </tr>
               </thead>
               <tbody>
-                {classroomDetails?.co_po_table
+              {classroomDetails?.co_po_table
                   ? Object.entries(classroomDetails.co_po_table).map(
                       ([co, details], index) => (
                         <tr key={index}>

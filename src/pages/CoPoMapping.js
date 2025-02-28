@@ -11,6 +11,8 @@ function CoPoMapping() {
   const [error, setError] = useState('');
   const navigate = useNavigate();
 
+  console.log(copoData)
+
   const handleInputChange = (currentCo, field, value) => {
     setCopoMapping((prev) => {
       const updated = { ...prev };
@@ -86,42 +88,51 @@ function CoPoMapping() {
             </tr>
           </thead>
           <tbody>
-            {Object.entries(copoMapping).map(([co, details]) => (
-              <tr key={co}>
-                <td className="px-4 py-2 border">
-                  <input
-                    type="text"
-                    value={co}
-                    onChange={(e) => handleInputChange(co, 'CO', e.target.value)}
-                    className="w-full border p-2 rounded focus:outline-none"
-                  />
-                </td>
-                <td className="px-4 py-2 border">
-                  <textarea
-                    value={details?.description || ''}
-                    onChange={(e) => handleInputChange(co, 'description', e.target.value)}
-                    className="w-full border p-2 rounded focus:outline-none"
-                  />
-                </td>
-                <td className="px-4 py-2 border">
-                  <input
-                    type="text"
-                    value={details?.['Cognitive Domain'] || ''}
-                    onChange={(e) => handleInputChange(co, 'Cognitive Domain', e.target.value)}
-                    className="w-full border p-2 rounded focus:outline-none"
-                  />
-                </td>
-                <td className="px-4 py-2 border">
-                  <input
-                    type="text"
-                    value={details?.PO || ''}
-                    onChange={(e) => handleInputChange(co, 'PO', e.target.value)}
-                    className="w-full border p-2 rounded focus:outline-none"
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
+  {Object.entries(copoMapping).map(([co, details]) => (
+    <tr key={co}>
+      <td className="px-4 py-2 border">
+        <input
+          type="text"
+          value={co}
+          onChange={(e) => handleInputChange(co, 'CO', e.target.value)}
+          className="w-full border p-2 rounded focus:outline-none"
+        />
+      </td>
+      <td className="px-4 py-2 border">
+        <textarea
+          value={details?.description || ''}
+          onChange={(e) => handleInputChange(co, 'description', e.target.value)}
+          className="w-full border p-2 rounded focus:outline-none"
+        />
+      </td>
+      <td className="px-4 py-2 border">
+        <input
+          type="text"
+          value={details?.['Cognitive Domain'] || ''}
+          onChange={(e) => handleInputChange(co, 'Cognitive Domain', e.target.value)}
+          className="w-full border p-2 rounded focus:outline-none"
+        />
+      </td>
+      <td className="px-4 py-2 border">
+        <input
+          type="text"
+          value={details?.PO || ''}
+          onChange={(e) => handleInputChange(co, 'PO', e.target.value)}
+          className="w-full border p-2 rounded focus:outline-none"
+        />
+      </td>
+      <td className="px-4 py-2 border">
+        <input
+          type="text"
+          value={details?.weight || ''}
+          onChange={(e) => handleInputChange(co, 'weight', e.target.value)}
+          className="w-full border p-2 rounded focus:outline-none"
+        />
+      </td>
+    </tr>
+  ))}
+</tbody>
+
         </table>
       </div>
       <div className="flex justify-end mt-4">

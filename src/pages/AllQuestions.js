@@ -110,7 +110,7 @@ function AllQuestions() {
           questionName,
           weight,
           coPoMapping: response.data.data.co_po_mapping,
-          questionDescriptions: response.data.data.question_descriptions
+          questionData: response.data
         });
   
         // ✅ Force wait before navigation to ensure data is ready
@@ -120,7 +120,7 @@ function AllQuestions() {
               questionName,
               weight,
               coPoMapping: response.data.data.co_po_mapping,
-              questionDescriptions: response.data.data.question_descriptions
+              questionData: response.data
             },
           });
         }, 500); // Delay to ensure state is set

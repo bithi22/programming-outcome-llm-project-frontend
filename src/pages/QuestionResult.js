@@ -17,10 +17,17 @@ function QuestionResult() {
   const [totalColumns, setTotalColumns] = useState(0);
   const [globalMaxRow,setGlobalMaxRow] = useState(0)
   const [totalMarks, setTotalMarks] = useState(0)
-  // This array will hold the maximum allowed marks for each marks cell (excluding Student ID)
+  
+  // Array of maximum allowed marks for each marks cell (excluding Student ID)
   const [maxMarksArray, setMaxMarksArray] = useState([]);
   const fileInputRef = useRef(null);
   const question_id = location.state?.question_id;
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
+  // State for Add Student modal
+  const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+  const [numRowsToAdd, setNumRowsToAdd] = useState("");
 
   const navItems = [
     { label: "Join Class", path: "/joinclass" },
@@ -61,8 +68,26 @@ function QuestionResult() {
         colIndex += colSpan;
       });
       // In the bottom header row, add the "Total Marks" cell.
-      if (rowIndex === headerRowCount - 1) {
-        headerMatrix[rowIndex][totalColumnsWithTotal - 1] = "Total Marks";
+      if (rowIndex === 0) {
+        while (headerMatrix[rowIndex][colIndex] !== "") {
+          colIndex++;
+        }
+        headerMatrix[rowIndex][colIndex] = `Total Marks (${totalMarks})`;
+        const colSpan = 1
+        const rowSpan = globalMaxRow + 1
+        if (colSpan > 1 || rowSpan > 1) {
+          merges.push({
+            s: { r: rowIndex, c: colIndex },
+            e: { r: rowIndex + rowSpan - 1, c: colIndex + colSpan - 1 },
+          });
+          for (let i = rowIndex; i < rowIndex + rowSpan; i++) {
+            for (let j = colIndex; j < colIndex + colSpan; j++) {
+              if (i === rowIndex && j === colIndex) continue;
+              headerMatrix[i][j] = null;
+            }
+          }
+        }
+        colIndex += colSpan;
       }
     });
 
@@ -239,42 +264,63 @@ function QuestionResult() {
     setData(initialData);
   }, [question]);
 
-  // Update cell value with validation for marks cells.
   const handleCellChange = (rowIndex, colIndex, value) => {
     const updatedData = [...data];
+    
     // Student ID column: allow any input.
     if (colIndex === 0) {
       updatedData[rowIndex][colIndex] = value;
       setData(updatedData);
       return;
     }
-    // Allow empty string.
+  
+    // Get the maximum allowed for this cell (note: first marks cell is at index 1).
+    const max = maxMarksArray[colIndex - 1];
+  
+    // 1) If empty, just store it
     if (value === "") {
       updatedData[rowIndex][colIndex] = "";
       setData(updatedData);
       return;
     }
-    // Only allow numeric digits (no spaces or letters).
-    if (!/^\d+$/.test(value)) {
+    
+    // 2) Check if the input is either a valid decimal pattern or "." by itself
+    //    This regex allows digits, optional decimal point, and optional more digits
+    const decimalPattern = /^\d*\.?\d*$/;
+    if (!decimalPattern.test(value)) {
+      // If it doesn't match, do nothing (reject the change)
       return;
     }
-    let numericValue = parseInt(value, 10);
-    // Get maximum allowed for this cell (note: first marks cell is at index 1).
-    const max = maxMarksArray[colIndex - 1];
+  
+    // 3) If the string ends with ".", let the user keep typing
+    //    e.g. "12." should remain "12." until more digits appear
+    if (value.endsWith(".")) {
+      updatedData[rowIndex][colIndex] = value;
+      setData(updatedData);
+      return;
+    }
+  
+    // 4) Otherwise, it's a parseable number. Parse and clamp.
+    let numericValue = parseFloat(value);
     if (numericValue < 0) {
       numericValue = 0;
     }
     if (numericValue > max) {
       numericValue = max;
     }
+  
+    // Convert back to string and store
     updatedData[rowIndex][colIndex] = numericValue.toString();
     setData(updatedData);
   };
+  
+  
 
-  const addRow = () => {
-    const newRow = Array(totalColumns).fill("");
-    setData((prevData) => [...prevData, newRow]);
-  };
+  // Function to add multiple rows at once.
+    const addRows = (count) => {
+      const newRows = Array.from({ length: count }, () => Array(totalColumns).fill(""));
+      setData((prevData) => [...prevData, ...newRows]);
+    };
 
   const deleteRow = (rowIndex) => {
     const updatedData = data.filter((_, index) => index !== rowIndex);
@@ -314,6 +360,9 @@ function QuestionResult() {
 
     for (let i = 0; i < total_students; i++) {
       const student_id = data[i][0];
+      if(student_id.trim()===""){
+        continue
+      }
       const current = (obtained_marks_mapping[student_id] = {});
       let counter = 1;
 
@@ -481,180 +530,279 @@ function QuestionResult() {
     }
   };
 
-  return (
-    <div>
-      <Navbar
-        navItems={navItems}
-        actionButton={actionButton}
-        buttonStyle="border border-red-500 text-red-500 py-2 px-4 rounded-md hover:bg-red-500 hover:text-white"
-      />
-      <div className="container mx-auto px-6 mt-24">
-        <div className="flex justify-between items-center mb-4">
-          <button
-            onClick={addRow}
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-          >
-            Add Student
-          </button>
-          <button
-            onClick={saveRecord}
-            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 ml-2"
-          >
-            Save Record
-          </button>
-          {!question?.report_submitted && (
-            <button
-              onClick={publishResult}
-              className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600 ml-2"
-            >
-              Publish Result
-            </button>
-          )}
-          <button
-            onClick={downloadXLSX}
-            className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 ml-2"
-          >
-            Download CSV
-          </button>
-          <button
-            onClick={triggerFileUpload}
-            className="bg-indigo-500 text-white px-4 py-2 rounded-md hover:bg-indigo-600 ml-2"
-          >
-            Upload XLSX
-          </button>
-          <input
-            type="file"
-            accept=".xlsx, .xls"
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            style={{ display: "none" }}
-          />
-        </div>
-        {popupVisible && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-blue-500 text-white px-6 py-4 rounded-md shadow-lg">
-              <div className="flex items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-white mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span>Records have been saved successfully!</span>
-              </div>
-            </div>
-          </div>
-        )}
-        {popupMessage && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-blue-500 text-white px-6 py-4 rounded-md shadow-lg">
-              <div className="flex items-center">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-white mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span>Report Published!</span>
-              </div>
-            </div>
-          </div>
-        )}
-        <div className="overflow-x-auto">
-          <table className="table-auto w-full border-collapse border border-gray-300">
-            <thead>
-              {headers.map((headerRow, rowIndex) => (
-                <tr key={rowIndex}>
-                  {headerRow.map((header, colIndex) => (
-                    <th
-                      key={`${rowIndex}-${colIndex}`}
-                      colSpan={header.colSpan}
-                      rowSpan={header.rowSpan}
-                      className="border border-gray-300 px-4 py-2 bg-gray-100 text-center"
-                    >
-                      {header.label}
-                    </th>
-                  ))}
-                  {rowIndex === 0 && (
-                    <th 
-                    colSpan={1}
-                    rowSpan={globalMaxRow+1}                    
-                    className="border border-gray-300 px-4 py-2 bg-gray-100 text-center">
-                      {`Total Marks (${totalMarks})`}
-                    </th>
-                  )}
-                </tr>
-              ))}
-            </thead>
-            <tbody>
-              {data.map((row, rowIndex) => {
-                // Compute the total marks for this student (ignoring Student ID).
-                let total = 0;
-                for (let i = 1; i < row.length; i++) {
-                  const num = parseFloat(row[i]);
-                  total += isNaN(num) ? 0 : num;
+// Calculate paginated data for display.
+const startIndex = (currentPage - 1) * rowsPerPage;
+const paginatedData = data.slice(startIndex, startIndex + rowsPerPage);
+const totalPages = Math.ceil(data.length / rowsPerPage);
+
+return (
+  <div>
+    <Navbar
+      navItems={navItems}
+      actionButton={actionButton}
+      buttonStyle="border border-red-500 text-red-500 py-2 px-4 rounded-md hover:bg-red-500 hover:text-white"
+    />
+    <div className="container mx-auto px-6 mt-24">
+    <div
+    className="flex flex-wrap items-center mb-4 bg-white py-3 top-0 z-10"
+  >
+    <button
+      onClick={() => setShowAddStudentModal(true)}
+      className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 mr-2"
+    >
+      Add Student
+    </button>
+    <button
+      onClick={saveRecord}
+      className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 mr-2"
+    >
+      Save Record
+    </button>
+    {!question?.report_submitted && (
+      <button
+        onClick={publishResult}
+        className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600 mr-2"
+      >
+        Publish Result
+      </button>
+    )}
+    <button
+      onClick={downloadXLSX}
+      className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 mr-2"
+    >
+      Download XLSX
+    </button>
+    <button
+      onClick={triggerFileUpload}
+      className="bg-indigo-500 text-white px-4 py-2 rounded-md hover:bg-indigo-600 mr-2"
+    >
+      Upload XLSX
+    </button>
+    <input
+      type="file"
+      accept=".xlsx, .xls"
+      ref={fileInputRef}
+      onChange={handleFileUpload}
+      style={{ display: "none" }}
+    />
+  </div>
+      {/* Add Student Modal */}
+      {showAddStudentModal && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded shadow-md w-80">
+            <h3 className="text-lg font-bold mb-4">Add Students</h3>
+            <input
+              type="number"
+              min="1"
+              value={numRowsToAdd}
+              onChange={(e) => {
+                const val = e.target.value;
+                // Accept only positive integers (or empty string)
+                if (val === "" || /^[1-9]\d*$/.test(val)) {
+                  setNumRowsToAdd(val);
                 }
-                return (
-                  <tr key={rowIndex}>
-                    {row.map((cell, colIndex) => (
-                      <td key={colIndex} className="border border-gray-300 px-4 py-2">
-                        <input
-                          type="text"
-                          value={cell}
-                          onChange={(e) =>
-                            handleCellChange(rowIndex, colIndex, e.target.value)
-                          }
-                          className="w-full border-none bg-transparent focus:outline-none"
-                        />
-                      </td>
-                    ))}
-                    <td className="border border-gray-300 px-4 py-2 text-center">
-                      {total}
-                    </td>
-                    <td className="border border-gray-300 px-4 py-2 text-center">
-                      <button onClick={() => deleteRow(rowIndex)}>
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-6 w-6 text-red-500 hover:text-red-700"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M6 18L18 6M6 6l12 12"
-                          />
-                        </svg>
-                      </button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+              }}
+              placeholder="Enter number of rows"
+              className="border p-2 mb-4 w-full"
+            />
+            <div className="flex justify-end">
+              <button
+                onClick={() => {
+                  setShowAddStudentModal(false);
+                  setNumRowsToAdd("");
+                }}
+                className="mr-2 bg-gray-300 text-black px-4 py-2 rounded"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  const count = parseInt(numRowsToAdd, 10);
+                  if (!isNaN(count) && count > 0) {
+                    addRows(count);
+                    setShowAddStudentModal(false);
+                    setNumRowsToAdd("");
+                  }
+                }}
+                className="bg-blue-500 text-white px-4 py-2 rounded"
+              >
+                Add
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
+      )}
+
+      {/* Popup for saved records */}
+      {popupVisible && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-blue-500 text-white px-6 py-4 rounded-md shadow-lg">
+            <div className="flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 text-white mr-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span>Records have been saved successfully!</span>
+            </div>
+          </div>
+        </div>
+      )}
+      {popupMessage && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="bg-blue-500 text-white px-6 py-4 rounded-md shadow-lg">
+            <div className="flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 text-white mr-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12l2 2 4-4m5 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span>Report Published!</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Scrollable Table */}
+  <div className="overflow-y-auto max-h-[500px] border border-gray-300">
+    <table className="table-auto w-full border-collapse border border-gray-300">
+      <thead className="bg-gray-100 sticky top-0 z-10">
+        {headers.map((headerRow, rowIndex) => (
+          <tr key={rowIndex}>
+            {headerRow.map((header, colIndex) => (
+              <th
+                key={`${rowIndex}-${colIndex}`}
+                colSpan={header.colSpan}
+                rowSpan={header.rowSpan}
+                className="border border-gray-300 px-4 py-2 text-center"
+              >
+                {header.label}
+              </th>
+            ))}
+            {rowIndex === 0 && (
+              <th
+                colSpan={1}
+                rowSpan={globalMaxRow + 1}
+                className="border border-gray-300 px-4 py-2 text-center"
+              >
+                {`Total Marks (${totalMarks})`}
+              </th>
+            )}
+          </tr>
+        ))}
+      </thead>
+      <tbody>
+        {paginatedData.map((row, rowIndex) => {
+          let total = 0;
+          for (let i = 1; i < row.length; i++) {
+            const num = parseFloat(row[i]);
+            total += isNaN(num) ? 0 : num;
+          }
+          return (
+            <tr key={startIndex + rowIndex}>
+              {row.map((cell, colIndex) => (
+                <td key={colIndex} className="border border-gray-300 px-4 py-2">
+                  <input
+                    type="text"
+                    value={cell}
+                    onChange={(e) =>
+                      handleCellChange(
+                        startIndex + rowIndex,
+                        colIndex,
+                        e.target.value
+                      )
+                    }
+                    className="w-full border-none bg-transparent focus:outline-none"
+                  />
+                </td>
+              ))}
+              <td className="border border-gray-300 px-4 py-2 text-center">
+                {total}
+              </td>
+              <td className="border border-gray-300 px-4 py-2 text-center">
+                <button onClick={() => deleteRow(startIndex + rowIndex)}>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6 text-red-500 hover:text-red-700"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  </div>
+  {/* Pagination: Fixed at the bottom */}
+  <div
+    className="flex items-center justify-between mt-4 bg-white py-3 sticky bottom-0 z-10"
+  >
+    <div>
+      <span>Rows per page: </span>
+      <select
+        value={rowsPerPage}
+        onChange={(e) => {
+          setRowsPerPage(parseInt(e.target.value, 10));
+          setCurrentPage(1);
+        }}
+        className="border p-2 rounded"
+      >
+        <option value={20}>20</option>
+        <option value={50}>50</option>
+        <option value={100}>100</option>
+      </select>
     </div>
-  );
+    <div className="flex items-center">
+      <button
+        disabled={currentPage === 1}
+        onClick={() => setCurrentPage((prev) => prev - 1)}
+        className="px-2 py-1 border rounded mr-2"
+      >
+        Previous
+      </button>
+      <span>
+        Page {currentPage} of {totalPages || 1}
+      </span>
+      <button
+        disabled={currentPage >= totalPages}
+        onClick={() => setCurrentPage((prev) => prev + 1)}
+        className="px-2 py-1 border rounded ml-2"
+      >
+        Next
+      </button>
+    </div>
+  </div>
+    </div>
+  </div>
+);
 }
 
 export default QuestionResult;
-

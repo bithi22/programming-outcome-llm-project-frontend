@@ -76,7 +76,6 @@ function Classroom() {
       );
 
       if (response.status === 200 && response.data.success) {
-        console.log(response)
         navigate('/copomapping', {
           state: {
             classroom_id,
@@ -165,12 +164,13 @@ function Classroom() {
                             {details.description || 'No description provided'}
                           </td>
                           <td className="px-4 py-2 border">
-                            {details['Cognitive Domain']
-                              ||'No domains provided'}
+                            {details['Cognitive Domain'] || 'No domain provided'}
                           </td>
                           <td className="px-4 py-2 border">
-                            {details.PO
-                              || 'No PO data provided'}
+                            {details['PO'] || 'No PO data provided'}
+                          </td>
+                          <td className="px-4 py-2 border">
+                            {details['weight'] || 'No weight data provided'}
                           </td>
                         </tr>
                       )

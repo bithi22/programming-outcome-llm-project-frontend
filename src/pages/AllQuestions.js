@@ -162,7 +162,25 @@ function AllQuestions() {
                 className="flex items-center justify-between p-4 border rounded-lg shadow-sm hover:bg-gray-100 cursor-pointer"
                 onClick={() => handleQuestionClick(question)}
               >
-                <div className="text-lg font-semibold">{question.name}</div>
+                <div className="flex items-center space-x-4">
+                  <div className="bg-gray-300 rounded-full w-10 h-10 flex items-center justify-center">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-6 w-6 text-gray-600"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 10h11M9 21V3m0 18c6.627 0 12-5.373 12-12 0-6.627-5.373-12-12-12S3 4.373 3 11c0 6.627 5.373 12 12 12z"
+                      />
+                    </svg>
+                  </div>
+                  <div className="text-lg font-semibold">{question.name}</div>
+                </div>
               </div>
             ))}
           </div>

@@ -135,6 +135,17 @@ function Classroom() {
     setEditedCoPoTable(null);
   };
 
+  const handleReportsClick = ()=>{
+    navigate("/showclassroomreport",{
+      state : {
+        classroom_id,
+        committee_access : classroomDetails.committee_access,
+        teacher_access : classroomDetails.teacher_access,
+        classroom_name : classroomDetails.name
+      }
+    })
+  }
+
   // Save changes: transform editedCoPoTable so that co_label is the new key
   // Validate the description and weight
   const handleSaveChanges = async () => {
@@ -252,6 +263,12 @@ function Classroom() {
               </p>
             </div>
             <div className="space-x-4">
+            <button
+                onClick={handleReportsClick}
+                className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+              >
+                Classroom Reports
+              </button>
               <button
                 onClick={handleQuestionClick}
                 className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"

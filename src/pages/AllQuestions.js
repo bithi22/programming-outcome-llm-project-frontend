@@ -12,7 +12,8 @@ function AllQuestions() {
   const [questionName, setQuestionName] = useState("");
   const [weight, setWeight] = useState("");
   const [file, setFile] = useState(null);
-  
+  const [mappingLoading, setMappingLoading] = useState(false);
+
   const navigate = useNavigate();
   const location = useLocation();
   const classroom_id = location.state?.classroom_id;
@@ -59,7 +60,41 @@ function AllQuestions() {
   }, [classroom_id]);
 
   const handleQuestionClick = (question) => {
-    navigate("/questiondisplay", { state: { classroom_id, question_id: question._id } });
+    navigate("/questiondisplay", {
+      state: { classroom_id, question_id: question._id },
+    });
+  };
+
+  const handleTemplateFileDownload = async (fileType) => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        setError("You are not logged in. Please log in first.");
+        setLoading(false);
+        return;
+      }
+      const response = await axios.get(
+        `http://127.0.0.1:8000/question/template`,
+        {
+          params: { file_type: fileType },
+          responseType: "blob",
+          headers: {
+            accessToken: token,
+          },
+        }
+      );
+
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `downloaded.${fileType}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error("Error downloading file:", error);
+      alert("Error downloading file. Please try again.");
+    }
   };
 
   const handleAddQuestion = () => {
@@ -70,28 +105,35 @@ function AllQuestions() {
     const uploadedFile = event.target.files[0];
     if (!uploadedFile) return;
     
+    // Check if the file type is PDF
+    if (uploadedFile.type !== "application/pdf") {
+      setError("Only PDF files are allowed.");
+      setFile(null);
+      return;
+    }
+    setError(""); // Clear previous errors if any
     setFile(uploadedFile);
   };
-
-  
 
   const handleGetCoPoMapping = async () => {
     if (!file) {
       setError("Please upload a file before proceeding.");
       return;
     }
-  
+
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) {
         setError("You are not logged in. Please log in first.");
         return;
       }
-  
+
+      setMappingLoading(true); // Start loader
+
       const formData = new FormData();
       formData.append("classroom_id", classroom_id);
       formData.append("file", file);
-  
+
       const response = await axios.post(
         "http://127.0.0.1:8000/question/co-po-mapping",
         formData,
@@ -102,34 +144,26 @@ function AllQuestions() {
           },
         }
       );
-  
+
       if (response.status === 200) {
-        console.log(classroom_id)
-        console.log("✅ Sending Data to Next Page:", {
-          classroom_id,
-          questionName,
-          weight,
-          coPoMapping: response.data.data.co_po_mapping,
-          questionData: response.data
-        });
-  
-        // ✅ Force wait before navigation to ensure data is ready
+        // Force a short wait before navigation to ensure data is ready
         setTimeout(() => {
+          setMappingLoading(false);
           navigate("/questioncopomapping", {
             state: {
+              classroom_id,
               questionName,
-              weight,
-              coPoMapping: response.data.data.co_po_mapping,
-              questionData: response.data
+              questionWeight: weight,
+              questionData: response.data.data,
             },
           });
-        }, 500); // Delay to ensure state is set
+        }, 500);
       }
     } catch (err) {
       setError("Failed to get CO PO Mapping. Please try again.");
+      setMappingLoading(false);
     }
   };
-  
 
   return (
     <div>
@@ -147,6 +181,18 @@ function AllQuestions() {
             className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
           >
             Add a New Question
+          </button>
+          <button
+            onClick={() => handleTemplateFileDownload("docx")}
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+          >
+            Download DOCX Template
+          </button>
+          <button
+            onClick={() => handleTemplateFileDownload("zip")}
+            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+          >
+            Download Latex Template
           </button>
         </div>
 
@@ -185,7 +231,9 @@ function AllQuestions() {
             ))}
           </div>
         ) : (
-          <div className="text-gray-500 text-center mt-10">No questions available.</div>
+          <div className="text-gray-500 text-center mt-10">
+            No questions available.
+          </div>
         )}
       </div>
 
@@ -209,15 +257,25 @@ function AllQuestions() {
             />
             <input
               type="file"
+              accept="application/pdf"
               className="border p-2 w-full rounded mb-4"
               onChange={handleFileChange}
             />
             <button
               onClick={handleGetCoPoMapping}
-              className="bg-blue-500 text-white px-4 py-2 rounded-md w-full hover:bg-blue-600"
+              disabled={mappingLoading}
+              className="bg-blue-500 text-white px-4 py-2 rounded-md w-full hover:bg-blue-600 disabled:opacity-50"
             >
               Get CO PO Mapping
             </button>
+            {mappingLoading && (
+              <div className="flex items-center justify-center mt-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                <span className="ml-2 text-blue-500">
+                  Please wait, this may take a while.
+                </span>
+              </div>
+            )}
             <button
               className="mt-2 w-full text-red-500 hover:underline"
               onClick={() => setShowModal(false)}

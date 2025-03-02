@@ -13,10 +13,7 @@ function Register() {
   const navigate = useNavigate();
 
   const navItems = [
-    { label: 'Create Class', path: '/createclass' },
     { label: 'Invite Members', path: '/invitemembers' },
-    { label: 'Generate CO-PO Table', path: '/generatecopo' },
-    { label: 'Generate Report', path: '/generatereport' },
   ];
 
   const actionButton = { label: 'Signup', path: '/signup' };
@@ -73,16 +70,16 @@ function Register() {
   };
 
   return (
-    <div className="relative h-screen bg-gradient-to-br from-blue-500 to-blue-700 flex flex-col items-center justify-center">
+    <div className="relative h-screen bg-gradient-to-br from-blue-500 to-blue-700 flex flex-col items-center">
       {/* Navbar */}
       <Navbar
         navItems={navItems}
         actionButton={actionButton}
-        buttonStyle="bg-blue-500 text-white no-underline py-2 px-4 rounded-md hover:bg-blue-600"
+        buttonStyle="bg-blue-500 text-white py-2 px-4 rounded-md no-underline hover:bg-indigo-500 transition-all"
       />
 
       {/* Registration Card */}
-      <div className="bg-white shadow-lg rounded-xl p-8 w-[400px]">
+      <div className="mt-44 bg-white shadow-lg rounded-xl p-8 w-[400px]">
         <h2 className="text-2xl font-bold mb-4 text-left">
           Register to Shamik<span className="text-blue-500">LLM</span>
         </h2>
@@ -156,7 +153,7 @@ function Register() {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+            className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-indigo-500"
           >
             Register
           </button>

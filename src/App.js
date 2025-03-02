@@ -12,13 +12,16 @@ import AllQuestions from './pages/AllQuestions';
 import QuestionDisplay from './pages/QuestionDisplay';
 import CoPoMapping from './pages/CoPoMapping';
 import QuestionReport from './pages/QuestionReport';
+import Intro from './pages/Intro';
 
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Register />} />
+        <Route path="/" element={<Intro />} />
+        <Route path="/register" element={<Register />} />
+
         <Route path="/login" element={<Signin />} />
         <Route path="/dashboard" element={<DashBoard />} />
         <Route path="/emailVerification" element={<EmailVerification/>}/>

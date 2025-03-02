@@ -246,7 +246,7 @@ function Classroom() {
       <div className="container mx-auto px-6 mt-24">
         <div className="bg-white shadow-md rounded-lg overflow-hidden mb-8">
           <img
-            src="https://via.placeholder.com/800x300.png?text=Class+Image"
+            src="/assets/longImage.png"
             alt="Class Banner"
             className="w-full h-56 object-cover"
           />

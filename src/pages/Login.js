@@ -7,50 +7,45 @@ function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
   const navItems = [
-    { label: 'Create Class', path: '/createclass' },
-    { label: 'Invite Members', path: '/invitemembers' },
-    { label: 'Generate CO-PO Table', path: '/generatecopo' },
-    { label: 'Generate Report', path: '/generatereport' },
+    { label: 'Home', path: '/' },
+    { label: 'Contact Us', path: '/contactus' },
   ];
 
   const actionButton = { label: 'Signup', path: '/signup' };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
+    setLoading(true);
 
     if (!email || !password) {
       setError('Both email and password are required.');
+      setLoading(false);
       return;
     }
 
     try {
       const requestBody = { email, password };
-
-      // Send POST request to login endpoint
       const response = await axios.post('http://127.0.0.1:8000/auth/login', requestBody);
 
       if (response.status === 200) {
-        // Save the access token to localStorage
         localStorage.setItem('accessToken', response.headers.accesstoken);
-        console.log(response)
-        setError('');
-        navigate('/dashboard'); // Navigate to the dashboard on success
+        navigate('/dashboard');
       }
     } catch (error) {
-      if (error.response) {
-        setError(error.response.data.message || 'Invalid email or password.');
-      } else {
-        setError('Network error. Please try again.');
-      }
+      setError(error.response?.data?.message || 'Invalid email or password.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="relative h-screen bg-gradient-to-br from-blue-500 to-blue-700 flex flex-col items-center justify-center">
+    <div className="relative min-h-screen w-full bg-white flex flex-col items-center">
       {/* Navbar */}
       <Navbar
         navItems={navItems}
@@ -58,72 +53,87 @@ function Login() {
         buttonStyle="bg-blue-500 text-white no-underline py-2 px-4 rounded-md hover:bg-blue-600"
       />
 
-      {/* Login Card */}
-      <div className="bg-white shadow-lg rounded-xl p-8 w-[400px]">
-        <h2 className="text-2xl font-bold mb-4 text-left">
-          Welcome back to Shamik<span className="text-blue-500">LLM</span>
-        </h2>
-        <p className="text-black mb-6 text-left">
-          Register to ShamikLLM and Unleash the Power of Ajke Thak.
-        </p>
+      {/* Vector Images (scaled by viewport width) */}
+      <img
+        src="/assets/Vector1.png"
+        alt="Decorative Vector 1"
+        className="absolute bottom-0 left-0 w-[25vw] md:w-[20vw] h-auto"
+      />
+      <img
+        src="/assets/vector2.png"
+        alt="Decorative Vector 2"
+        className="absolute top-[4rem] right-0 w-[25vw] md:w-[20vw] h-auto"
+      />
 
-        {/* Form */}
-        <form onSubmit={handleSubmit}>
-          {/* Email Field */}
-          <div className="mb-4">
-            <label
-              htmlFor="email"
-              className="block font-bold text-left mb-1 text-black"
+      {/* Main Container */}
+      <div className="flex-1 flex flex-col items-center justify-center w-full">
+        {/* Login Card */}
+        <div className="relative z-10 bg-white shadow-lg rounded-xl p-8 w-11/12 max-w-sm md:max-w-md">
+          <h2 className="text-2xl font-bold mb-4 text-left">
+            Welcome back to Shamik
+            <span className="text-blue-500">LLM</span>
+          </h2>
+          <p className="text-black mb-6 text-left">
+            Register to ShamikLLM and Unleash the Power of Ajke Thak.
+          </p>
+
+          <form onSubmit={handleSubmit}>
+            <div className="mb-4">
+              <label
+                htmlFor="email"
+                className="block font-bold text-left mb-1 text-black"
+              >
+                Email
+              </label>
+              <input
+                type="email"
+                id="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter your email"
+              />
+            </div>
+            <div className="mb-4">
+              <label
+                htmlFor="password"
+                className="block font-bold text-left mb-1 text-black"
+              >
+                Password
+              </label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter your password"
+              />
+            </div>
+            {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+            <button
+              type="submit"
+              className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 flex justify-center items-center"
+              disabled={loading}
             >
-              Email
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your email"
-            />
-          </div>
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                  Logging in...
+                </>
+              ) : (
+                'Login'
+              )}
+            </button>
+          </form>
 
-          {/* Password Field */}
-          <div className="mb-4">
-            <label
-              htmlFor="password"
-              className="block font-bold text-left mb-1 text-black"
-            >
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your password"
-            />
-          </div>
-
-          {/* Error Message */}
-          {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
-          >
-            Login
-          </button>
-        </form>
-
-        {/* Sign In Link */}
-        <p className="mt-4 text-gray-600 text-center">
-          Don't have an account?{' '}
-          <a href="/" className="text-blue-500 hover:underline">
-            Register
-          </a>
-        </p>
+          <p className="mt-4 text-gray-600 text-center">
+            Don't have an account?{' '}
+            <a href="/register" className="text-blue-500 hover:underline">
+              Register
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );

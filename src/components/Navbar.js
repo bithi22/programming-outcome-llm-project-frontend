@@ -18,7 +18,7 @@ function Navbar({ navItems, actionButton, buttonStyle }) {
           <Link
             key={index}
             to={item.path}
-            className="text-black hover:!text-blue-700 text-lg no-underline"
+            className="text-black hover:!text-blue-700  text-lg no-underline"
           >
             {item.label}
           </Link>

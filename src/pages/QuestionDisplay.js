@@ -61,7 +61,7 @@ function QuestionDisplay() {
   };
 
   const handleShowResult = () => {
-    navigate('/showquestionreport', { state: { question_id, classroom_id } });
+    navigate('/showquestionreport', { state: { question_id, classroom_id, question_name : question.name } });
   };
 
   const renderMappings = () => {
@@ -192,14 +192,14 @@ Object.entries(question.question_details).forEach(([key, value]) => {
               onClick={handleGenerateResult}
               className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 mr-2"
             >
-              Generate Result
+              Marksheet
             </button>
             {question?.report_submitted && (
               <button
                 onClick={handleShowResult}
                 className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
               >
-                Show Result
+                Reports
               </button>
             )}
           </div>

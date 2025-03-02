@@ -12,6 +12,7 @@ import AllQuestions from './pages/AllQuestions';
 import QuestionDisplay from './pages/QuestionDisplay';
 import CoPoMapping from './pages/CoPoMapping';
 import QuestionReport from './pages/QuestionReport';
+import ClassroomReport from './pages/ClassroomReport';
 import Intro from './pages/Intro';
 
 
@@ -33,6 +34,7 @@ function App() {
         <Route path="/questiondisplay" element={<QuestionDisplay/>}/>
         <Route path="/copomapping" element={<CoPoMapping/>}/>
         <Route path="/showquestionreport" element={<QuestionReport/>}/>
+        <Route path="/showclassroomreport" element={<ClassroomReport/>}/>
 
       </Routes>
     </Router>

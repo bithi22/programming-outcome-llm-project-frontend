@@ -73,28 +73,43 @@ function Dashboard() {
       }
       const response = await axios.post('http://127.0.0.1:8000/classroom/join', { code: joinCode }, { headers: { accessToken: token } });
       if (response.status === 200) {
-        setError('');
-        // Reset join code after success
-        setJoinCode('');
-        setIsJoinModalOpen(false);
-        fetchRegisteredClasses();
+        setTimeout(()=>{
+          setError('');
+          // Reset join code after success
+          setJoinCode('');
+          setIsJoinModalOpen(false);
+          fetchRegisteredClasses();
+          setLoadingJoin(false)
+        },1500)
       }
     } catch (error) {
-      setError(error.response?.data?.message || 'Failed to join classroom. Please try again.');
-    } finally {
-      setLoadingJoin(false);
-    }
+      setTimeout(()=>{
+        setError(error.response?.data?.message || 'Failed to join classroom. Please try again.');
+        setLoadingJoin(false)
+      },1500)
+    } 
   };
+
+  function isStartDateEarlier(start_date, end_date) {
+    return new Date(start_date) < new Date(end_date);
+  }
 
   const handleCreateClass = async () => {
     setLoadingCreate(true);
     setError('');
     const { name, course, course_code, start_date, end_date } = newClass;
-    if (!name || !course || !course_code) {
+    if (!name || !course || !course_code || !start_date || !end_date) {
       setError('Please fill in all fields.');
       setLoadingCreate(false);
       return;
     }
+
+    if(!isStartDateEarlier(start_date,end_date)){
+      setError('Semester start date must be earlier than semester end date.')
+      setLoadingCreate(false)
+      return
+    }
+
     try {
       const token = localStorage.getItem('accessToken');
       if (!token) {
@@ -104,22 +119,45 @@ function Dashboard() {
       }
       const response = await axios.post('http://127.0.0.1:8000/classroom', { name, course, course_code, start_date, end_date }, { headers: { accessToken: token } });
       if (response.status === 201) {
-        setError('');
-        // Reset newClass fields after success
-        setNewClass({ name: '', course: '', course_code: '', start_date: '', end_date: '' });
-        setIsCreateModalOpen(false);
-        fetchRegisteredClasses();
+        setTimeout(()=>{
+          setError('');
+          // Reset newClass fields after success
+          setNewClass({ name: '', course: '', course_code: '', start_date: '', end_date: '' });
+          setIsCreateModalOpen(false);
+          setLoadingCreate(false)
+          fetchRegisteredClasses();
+        },1500)
+        
       }
     } catch (error) {
-      setError(error.response?.data?.message || 'Failed to create classroom. Please try again.');
-    } finally {
-      setLoadingCreate(false);
-    }
+      setTimeout(()=>{
+        setError(error.response?.data?.message || 'Failed to create classroom. Please try again.');
+        setLoadingCreate(false)
+      },1500)
+    } 
   };
 
   const handleViewClass = (classId) => {
     navigate('/classroom', { state: { classroom_id: classId } });
   };
+
+  const handleCancelJoin = ()=>{
+    setIsJoinModalOpen(false)
+    setError('')
+    setJoinCode('')
+  }
+
+  const handleCancelCreate = ()=>{
+    setIsCreateModalOpen(false)
+    setError('')
+    setNewClass({
+      name: '',
+      course: '',
+      course_code: '',
+      start_date: '',
+      end_date: ''
+    })
+  }
 
   return (
     <div>
@@ -131,19 +169,19 @@ function Dashboard() {
       />
 
       {/* Page Content */}
-      <div className="px-20 mt-24 mr-6">
+      <div className="px-20 mt-24 mb-6 mr-6">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-left">Your Classes</h2>
           <div className="space-x-4">
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              className="bg-green-500 text-white py-2 px-4 font-semibold rounded-md hover:bg-green-600"
+              className="bg-green-700 text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-green-800"
             >
               Create Class
             </button>
             <button
               onClick={() => setIsJoinModalOpen(true)}
-              className="bg-blue-500 text-white py-2 px-4 font-semibold rounded-md hover:bg-blue-600"
+              className= "bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC]"
             >
               Join Class
             </button>
@@ -202,32 +240,61 @@ function Dashboard() {
         >
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-lg w-[400px] p-6">
-              <h2 className="text-xl font-semibold mb-4 text-left">Join a Classroom</h2>
+              <h2 className="text-xl font-semibold mb-2 text-left">Join a Classroom</h2>
               <p className="text-gray-600 text-left mb-6">
-                Enter the classroom code provided by your instructor.
+                Enter the classroom code you want to join.
               </p>
               <input
                 type="text"
+                spellCheck = {false}
                 value={joinCode}
                 onChange={(e) => setJoinCode(e.target.value)}
-                className="w-full px-4 py-2 border border-black rounded-md focus:outline-none"
+                className="w-full px-4 py-2 mb-2 border border-black rounded-md focus:outline-none"
                 placeholder="Enter classroom code"
               />
-              {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+              {error && <p className="text-red-500 text-sm mb-4 text-center font-bold">{error}</p>}
+              {/* Loader Spinner */}
+              {loadingJoin && (
+                <div className="flex justify-center mb-4">
+                  <svg
+                    className="animate-spin h-5 w-5 text-blue-500"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8H4z"
+                    ></path>
+                  </svg>
+                  <div className="mx-2">
+                    <span>Please wait...</span>
+                  </div>
+                </div>
+              )}
               <div className="flex justify-end space-x-4 mt-4">
                 <button
-                  onClick={() => setIsJoinModalOpen(false)}
-                  className="bg-gray-300 text-black py-2 px-4 rounded-md hover:bg-gray-400"
+                  onClick={handleCancelJoin}
+                  className="bg-gray-300 text-black py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-gray-400"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleJoinClass}
-                  className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+                  disabled = {loadingJoin}
+                  className={`w-full bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] ${
+                    loadingJoin ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 >
-                  {loadingJoin && (
-                    <span className="animate-spin h-4 w-4 border-t-2 border-white rounded-full mr-2"></span>
-                  )}
                   Join
                 </button>
               </div>
@@ -248,6 +315,12 @@ function Dashboard() {
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-lg w-[400px] p-6">
               <h2 className="text-xl font-semibold mb-4 text-left">Create a Classroom</h2>
+              <label
+                  htmlFor="classroom_name"
+                  className="block font-bold text-left mb-1 text-black"
+                >
+                  Classroom Name
+                </label>
               <input
                 type="text"
                 value={newClass.name}
@@ -255,6 +328,12 @@ function Dashboard() {
                 className="w-full px-4 py-2 border border-black rounded-md mb-4 focus:outline-none"
                 placeholder="Enter classroom name"
               />
+              <label
+                  htmlFor="course"
+                  className="block font-bold text-left mb-1 text-black"
+                >
+                  Course
+                </label>
               <input
                 type="text"
                 value={newClass.course}
@@ -262,6 +341,12 @@ function Dashboard() {
                 className="w-full px-4 py-2 border border-black rounded-md mb-4 focus:outline-none"
                 placeholder="Enter course name"
               />
+              <label
+                  htmlFor="course_code"
+                  className="block font-bold text-left mb-1 text-black"
+                >
+                  Course Code
+                </label>
               <input
                 type="text"
                 value={newClass.course_code}
@@ -271,6 +356,12 @@ function Dashboard() {
                 className="w-full px-4 py-2 border border-black rounded-md mb-4 focus:outline-none"
                 placeholder="Enter course code"
               />
+              <label
+                  htmlFor="start_Date"
+                  className="block font-bold text-left mb-1 text-black"
+                >
+                  Semester Start Date
+                </label>
               <input
                 type="date"
                 value={newClass.start_date}
@@ -278,6 +369,12 @@ function Dashboard() {
                 className="w-full px-4 py-2 border border-black rounded-md mb-4 focus:outline-none"
                 placeholder="Select start date"
               />
+              <label
+                  htmlFor="end_date"
+                  className="block font-bold text-left mb-1 text-black"
+                >
+                  Semester End Date
+                </label>
               <input
                 type="date"
                 value={newClass.end_date}
@@ -285,22 +382,50 @@ function Dashboard() {
                 className="w-full px-4 py-2 border border-black rounded-md mb-4 focus:outline-none"
                 placeholder="Select end date"
               />
-              {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
+              {error && <p className="text-red-500 text-center text-sm mb-4 font-bold">{error}</p>}
+              {/* Loader Spinner */}
+              {loadingCreate && (
+                <div className="flex justify-center mb-4">
+                  <svg
+                    className="animate-spin h-5 w-5 text-blue-500"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8H4z"
+                    ></path>
+                  </svg>
+                  <div className="mx-2">
+                    <span>Please wait...</span>
+                  </div>
+                </div>
+              )}
               <div className="flex justify-end space-x-4">
                 <button
-                  onClick={() => setIsCreateModalOpen(false)}
-                  className="bg-gray-300 text-black py-2 px-4 rounded-md hover:bg-gray-400"
+                  onClick={handleCancelCreate}
+                  className="bg-gray-300 text-black py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-gray-400"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleCreateClass}
-                  className="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600"
+                  disabled = {loadingCreate}
+                  className={`w-full bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] ${
+                    loadingCreate ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
                 >
-                  {loadingCreate && (
-                    <span className="animate-spin h-4 w-4 border-t-2 border-white rounded-full mr-2"></span>
-                  )}
-                  {loadingCreate ? 'Creating...' : 'Create'}
+                  Create
                 </button>
               </div>
             </div>

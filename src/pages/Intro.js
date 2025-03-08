@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
-const navItems = [{ label: "Signup", path: "/register" }];
+const navItems = [];
 
 const features = [
   {
@@ -47,8 +47,8 @@ function Intro() {
       {/* Navbar */}
       <Navbar
         navItems={navItems}
-        actionButton={{ label: "Login", path: "/login" }}
-        buttonStyle="bg-transparent border-2 border-blue-600 text-blue-600 rounded-full hover:!bg-blue-600 hover:text-white transition-all"
+        actionButton={{ label: "Login", path: "/login" }}        
+        buttonStyle = "bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC]"        
       />
 
       {/* Main Content */}
@@ -66,8 +66,9 @@ function Intro() {
           {/* CTA Buttons */}
           <div className="mt-6 flex gap-4">
             <button
-              onClick={() => navigate("/register")}
-              className="bg-blue-600 text-white py-3 px-6 rounded-full hover:!bg-indigo-600 transition-all"
+              onClick={() => navigate("/login")}
+              className= "bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC]"
+            
             >
               Get Started
             </button>
@@ -75,55 +76,53 @@ function Intro() {
         </div>
 
         {/* Right Side - Dynamic Features with Crossfade */}
-        <div className="md:w-1/2 flex flex-col items-center">
-          <AnimatePresence mode="wait">
-            {/* Only render the feature container if we have a valid feature */}
-            {activeFeature && (
-              <motion.div
-                key={activeFeature.title /* triggers re-animation */}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ duration: 0.7, ease: "easeInOut" }}
-                className="text-center max-w-2xl flex flex-col items-center"
-              >
-                {/* Larger, Responsive Image */}
-                <div className="w-full relative">
-                  {!imageLoaded && (
-                    /* Skeleton loader until image is loaded */
-                    <div className="w-full h-64 bg-gray-200 animate-pulse rounded-md mt-4"></div>
-                  )}
+        <div className="md:w-1/2 flex flex-col items-center justify-center h-[60vh] pb-[10vh]">
+  <AnimatePresence mode="wait">
+    {activeFeature && (
+      <motion.div
+        key={activeFeature.title}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        transition={{ duration: 0.5, ease: "easeInOut" }}
+        className="text-center flex flex-col items-center w-full max-w-lg h-full"
+      >
+        {/* Image Container */}
+        <div className="w-full flex-1 flex justify-center items-center">
+          {/* {!imageLoaded && (
+            <div className="w-full h-full bg-gray-200 animate-pulse rounded-md"></div>
+          )} */}
 
-                  <motion.img
-                    src={activeFeature.image}
-                    alt={activeFeature.title}
-                    className={`w-full max-w-2xl h-auto object-contain mt-4 ${
-                      !imageLoaded ? "hidden" : "block"
-                    }`}
-                    onLoad={() => setImageLoaded(true)}
-                  />
-                </div>
-
-                {/* Title and Description Below the Image */}
-                {imageLoaded && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                    className="text-center"
-                  >
-                    <h2 className="text-2xl font-bold text-blue-800 mt-4">
-                      {activeFeature.title}
-                    </h2>
-                    <p className="text-gray-600 mt-2">
-                      {activeFeature.description}
-                    </p>
-                  </motion.div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <motion.img
+            src={activeFeature.image}
+            alt={activeFeature.title}
+            className={`w-auto max-w-full max-h-full object-contain ${
+              !imageLoaded ? "hidden" : "block"
+            }`}
+            onLoad={() => setImageLoaded(true)}
+          />
         </div>
+
+        {/* Feature Text */}
+        {imageLoaded && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mt-4"
+          >
+            <h2 className="text-2xl font-bold text-blue-800">
+              {activeFeature.title}
+            </h2>
+            <p className="text-gray-600 mt-2">{activeFeature.description}</p>
+          </motion.div>
+        )}
+      </motion.div>
+    )}
+  </AnimatePresence>
+</div>
+
+
       </div>
     </div>
   );

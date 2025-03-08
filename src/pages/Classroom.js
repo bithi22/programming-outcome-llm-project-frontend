@@ -13,13 +13,12 @@ function Classroom() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSyllabusLoading, setIsSyllabusLoading] = useState(false);
 
+
   const navigate = useNavigate();
   const location = useLocation();
   const classroom_id = location.state?.classroom_id;
 
   const navItems = [
-    { label: "Join Class", path: "/joinclass" },
-    { label: "Generate Report", path: "/generatereport" },
   ];
 
   const actionButton = { label: "Logout", path: "/logout" };
@@ -48,7 +47,6 @@ function Classroom() {
           },
         }
       );
-      console.log("Classroom Details:", response.data);
       setClassroomDetails(response.data.data);
     } catch (error) {
       setError("Failed to fetch classroom details. Please try again.");
@@ -135,16 +133,16 @@ function Classroom() {
     setEditedCoPoTable(null);
   };
 
-  const handleReportsClick = ()=>{
-    navigate("/showclassroomreport",{
-      state : {
+  const handleReportsClick = () => {
+    navigate("/showclassroomreport", {
+      state: {
         classroom_id,
-        committee_access : classroomDetails.committee_access,
-        teacher_access : classroomDetails.teacher_access,
-        classroom_name : classroomDetails.name
-      }
-    })
-  }
+        committee_access: classroomDetails.committee_access,
+        teacher_access: classroomDetails.teacher_access,
+        classroom_name: classroomDetails.name,
+      },
+    });
+  };
 
   // Save changes: transform editedCoPoTable so that co_label is the new key
   // Validate the description and weight
@@ -243,7 +241,7 @@ function Classroom() {
         buttonStyle="border border-red-500 text-red-500 py-2 px-4 rounded-md hover:bg-red-500 hover:text-white"
       />
 
-      <div className="container mx-auto px-6 mt-24">
+      <div className="container mx-auto px-6 mt-24 mb-6">
         <div className="bg-white shadow-md rounded-lg overflow-hidden mb-8">
           <img
             src="/assets/longImage.png"
@@ -263,22 +261,22 @@ function Classroom() {
               </p>
             </div>
             <div className="space-x-4">
-            <button
+              <button
                 onClick={handleReportsClick}
-                className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+                className="bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC]"
               >
                 Classroom Reports
               </button>
               <button
                 onClick={handleQuestionClick}
-                className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+                className="bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC]"
               >
                 Questions
               </button>
               {classroomDetails?.committee_access && (
                 <button
                   onClick={() => setIsSyllabusModalOpen(true)}
-                  className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+                  className="bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC]"
                 >
                   Update Syllabus
                 </button>
@@ -294,7 +292,7 @@ function Classroom() {
             {isEditingTable && (
               <button
                 onClick={handleAddRow}
-                className="bg-green-700 text-white py-2 px-4 rounded-md hover:bg-green-800"
+                className="bg-green-700 text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-green-800"
               >
                 Add CO
               </button>
@@ -302,7 +300,7 @@ function Classroom() {
             {!isEditingTable ? (
               <button
                 onClick={handleEditTable}
-                className="bg-green-500 text-white py-2 px-4 rounded-md hover:bg-green-600"
+                className="border-2 border-[#3941FF] text-[#3941FF] py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center  hover:bg-[#2C36CC] hover:text-white hover:border-[#2C36CC]"
               >
                 Edit Table
               </button>
@@ -311,14 +309,14 @@ function Classroom() {
                 <button
                   onClick={handleSaveChanges}
                   disabled={isLoading}
-                  className="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+                  className="bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC]"
                 >
                   {isLoading ? "Please wait..." : "Save Changes"}
                 </button>
                 <button
                   onClick={handleCancelEdit}
                   disabled={isLoading}
-                  className="bg-gray-300 text-black py-2 px-4 rounded-md hover:bg-gray-400"
+                  className="bg-gray-300 text-black py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-gray-400"
                 >
                   Cancel
                 </button>

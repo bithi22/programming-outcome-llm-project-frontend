@@ -14,7 +14,7 @@ function Navbar({ navItems, actionButton, buttonStyle }) {
 
       {/* Navigation Links and Action Button */}
       <div className="flex items-center space-x-20 mr-20">
-        {navItems.map((item, index) => (
+        {navItems && navItems.map((item, index) => (
           <Link
             key={index}
             to={item.path}

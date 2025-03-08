@@ -17,7 +17,7 @@ function ClassCard({ title, year, semester, image,onClick }) {
         {/* Button */}
         <button 
         onClick={onClick}
-        className="mt-4 px-4 bg-blue-500 text-white py-2 text-sm rounded-md hover:bg-blue-600">
+        className="bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC]">
           View Class
         </button>
       </div>

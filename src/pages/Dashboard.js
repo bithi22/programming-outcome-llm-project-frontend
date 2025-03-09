@@ -255,7 +255,7 @@ function Dashboard() {
               {error && <p className="text-red-500 text-sm mb-4 text-center font-bold">{error}</p>}
               {/* Loader Spinner */}
               {loadingJoin && (
-                <div className="flex justify-center mb-4">
+                <div className="flex justify-center mt-2 mb-4">
                   <svg
                     className="animate-spin h-5 w-5 text-blue-500"
                     xmlns="http://www.w3.org/2000/svg"

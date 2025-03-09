@@ -11,7 +11,7 @@ function CoPoMapping() {
 
   // We’ll store our CO-PO data in a single state that’s always editable.
   const [copoTable, setCopoTable] = useState({});
-  
+
   // Loading and popup states
   const [isLoading, setIsLoading] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
@@ -40,9 +40,9 @@ function CoPoMapping() {
         };
       });
       setCopoTable(tempTable);
-    }
-    else{
-      setCopoTable(null)
+    } else {
+      // Ensure we work with an object
+      setCopoTable({});
     }
   }, [copoData]);
 
@@ -69,23 +69,66 @@ function CoPoMapping() {
 
   // Handle save (POST the data to your backend)
   const handleSave = async () => {
+    // Reset error message
+    setError("");
+
+    // Convert table rows into an array for easier processing
+    const rows = Object.values(copoTable);
+
+    // Validate that all fields are filled
+    for (let index = 0; index < rows.length; index++) {
+      const row = rows[index];
+      if (
+        !row.co_label.trim() ||
+        !row.description.trim() ||
+        !row["Cognitive Domain"].trim() ||
+        !row.PO.trim() ||
+        row.weight === "" ||
+        row.weight === null
+      ) {
+        setError(`Please fill in all fields for row ${index + 1}.`);
+        return;
+      }
+    }
+
+    // Validate that all CO names are unique
+    const coNames = rows.map((row) => row.co_label.trim());
+    const duplicate = coNames.find(
+      (name, index) => coNames.indexOf(name) !== index
+    );
+    if (duplicate) {
+      setError(`CO names must be unique. Duplicate found: "${duplicate}"`);
+      return;
+    }
+
+    // Validate that the total weight equals exactly 100
+    const totalWeight = rows.reduce((acc, row) => acc + Number(row.weight), 0);
+    if (totalWeight !== 100) {
+      setError(
+        `Total weight of all CO's must equal 100. Currently, it is ${totalWeight}.`
+      );
+      return;
+    }
+
+    // If validations pass, proceed to save
     setIsLoading(true);
     try {
-      // Adjust the payload & endpoint as per your backend requirements
-
       const token = localStorage.getItem("accessToken");
       if (!token) {
         setError("You are not logged in. Please log in first.");
+        setIsLoading(false);
         return;
       }
 
       const payload = {
         classroom_id,
         co_po_table: copoTable,
-        syllabus
+        syllabus,
       };
 
-      const response = await axios.post(`http://127.0.0.1:8000/classroom/syllabus`, payload,
+      const response = await axios.post(
+        `http://127.0.0.1:8000/classroom/syllabus`,
+        payload,
         {
           headers: {
             accessToken: token,
@@ -93,32 +136,30 @@ function CoPoMapping() {
         }
       );
 
-      if(response.data.success){
-        setIsLoading(false);
-        setPopupVisible(true);
+      if (response.data.success) {
+        setTimeout(()=>{
+          setPopupVisible(true);
+          setIsLoading(false);
+        },1500)
         // Show success popup for 3 seconds, then navigate
         setTimeout(() => {
-          navigate("/classroom",{
-            state : {
-              classroom_id
-            }
+          navigate("/classroom", {
+            state: {
+              classroom_id,
+            },
           });
         }, 3000);
-      }
-      else{
-        setIsLoading(false);
-        console.error("Error saving CO-PO mapping:", error);
-        setError("Failed to save CO-PO mapping.");
-        // Handle error (e.g., display a message)
+      } else {
+        setTimeout(()=>{
+          setError(response.data.message);
+          setIsLoading(false);
+        },1500)
       }
     } catch (error) {
-      setIsLoading(false);
-      console.error("Error saving CO-PO mapping:", error);
-      setError("Failed to save CO-PO mapping.");
-      // Handle error (e.g., display a message)
-    }
-    finally{
-      setIsLoading(false)
+      setTimeout(()=>{
+        setError(error.response?.data?.message);
+        setIsLoading(false);
+      },1500)
     }
   };
 
@@ -133,8 +174,8 @@ function CoPoMapping() {
       {/* Loading Overlay */}
       {isLoading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-500 bg-opacity-50">
-          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-          <span className="ml-2 text-blue-500">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#2C36CC]"></div>
+          <span className="ml-2 text-black">
             Please wait...
           </span>
         </div>
@@ -165,26 +206,33 @@ function CoPoMapping() {
         </div>
       )}
 
-      <div className="container mx-auto px-6 mt-24">
+      <div className="container mx-auto px-6 mt-24 mb-6">
         {/* CO-PO Table Header + Buttons */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold">CO-PO Table</h2>
           <div className="flex items-center space-x-4">
             <button
               onClick={handleAddRow}
-              className="bg-green-700 text-white py-2 px-4 rounded-md hover:bg-green-800"
+              disabled={isLoading}
+              className={`bg-green-700 text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-green-800 ${
+                isLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               Add CO
             </button>
             <button
               onClick={handleSave}
-              className="bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700"
+              disabled={isLoading}
+              className={`bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] ${
+                isLoading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               Save
             </button>
           </div>
         </div>
 
+        {/* Error Message */}
         {error && <p className="text-red-500 mb-2">{error}</p>}
 
         {/* CO-PO Table */}
@@ -203,11 +251,9 @@ function CoPoMapping() {
             <tbody>
               {Object.keys(copoTable).length > 0 ? (
                 Object.entries(copoTable).map(([key, details], index) => {
-                  const coLabel = details.co_label;
-                  const description = details.description;
+                  const { co_label, description, weight } = details;
                   const domain = details["Cognitive Domain"];
                   const po = details.PO;
-                  const weight = details.weight;
 
                   return (
                     <tr key={index}>
@@ -216,7 +262,7 @@ function CoPoMapping() {
                         <input
                           type="text"
                           className="w-full border px-2 py-1"
-                          value={coLabel}
+                          value={co_label}
                           onChange={(e) => {
                             const newValue = e.target.value;
                             setCopoTable((prev) => ({
@@ -302,7 +348,7 @@ function CoPoMapping() {
                       </td>
 
                       {/* Weight column */}
-                      <td className="px-4 py-2 border">
+                      <td className="px-2 py-2 border">
                         <input
                           type="number"
                           min="1"
@@ -311,7 +357,7 @@ function CoPoMapping() {
                           onChange={(e) => {
                             let newVal = e.target.value.trim();
                             if (newVal === "") {
-                              // Temporarily allow empty string, update on blur
+                              // Allow empty string temporarily; update on blur.
                               setCopoTable((prev) => ({
                                 ...prev,
                                 [key]: {
@@ -321,7 +367,7 @@ function CoPoMapping() {
                               }));
                               return;
                             }
-                            newVal = parseInt(newVal, 10);
+                            newVal = parseFloat(newVal);
                             if (isNaN(newVal) || newVal < 1) {
                               newVal = 1;
                             }
@@ -335,7 +381,7 @@ function CoPoMapping() {
                           }}
                           onBlur={(e) => {
                             let newVal = e.target.value.trim();
-                            if (newVal === "" || isNaN(parseInt(newVal, 10))) {
+                            if (newVal === "" || isNaN(parseFloat(newVal))) {
                               setCopoTable((prev) => ({
                                 ...prev,
                                 [key]: {

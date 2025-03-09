@@ -291,7 +291,7 @@ function Dashboard() {
                 <button
                   onClick={handleJoinClass}
                   disabled = {loadingJoin}
-                  className={`w-full bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] ${
+                  className={`bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] ${
                     loadingJoin ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >
@@ -421,7 +421,7 @@ function Dashboard() {
                 <button
                   onClick={handleCreateClass}
                   disabled = {loadingCreate}
-                  className={`w-full bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] ${
+                  className={`bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] ${
                     loadingCreate ? "opacity-50 cursor-not-allowed" : ""
                   }`}
                 >

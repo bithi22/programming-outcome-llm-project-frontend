@@ -694,12 +694,12 @@ function Classroom() {
                                 po || "No PO data provided"
                               )}
                             </td>
-                            <td className="px-4 py-2 border">
+                            <td className="px-2 py-2 text-center border">
                               {isEditingTable ? (
                                 <input
                                   type="number"
                                   min="1"
-                                  className="w-full border px-1 py-1"
+                                  className="w-full border text-center px-2 py-1"
                                   value={weight}
                                   onChange={(e) => {
                                     let newVal = e.target.value.trim();

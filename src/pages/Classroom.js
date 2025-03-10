@@ -699,6 +699,7 @@ function Classroom() {
                                 <input
                                   type="number"
                                   min="1"
+                                  max = "100"
                                   className="w-full border text-center px-2 py-1"
                                   value={weight}
                                   onChange={(e) => {

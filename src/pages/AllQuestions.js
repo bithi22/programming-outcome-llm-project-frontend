@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { jsPDF } from "jspdf";
 import Navbar from "../components/Navbar";
+import { motion, AnimatePresence } from "framer-motion";
 
 function AllQuestions() {
   const [questions, setQuestions] = useState([]);
@@ -13,15 +14,13 @@ function AllQuestions() {
   const [weight, setWeight] = useState("");
   const [file, setFile] = useState(null);
   const [mappingLoading, setMappingLoading] = useState(false);
+  const [mappingError, setMappingError] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
   const classroom_id = location.state?.classroom_id;
 
-  const navItems = [
-    { label: "Dashboard", path: "/dashboard" },
-    { label: "Classroom", path: "/classroom" },
-  ];
+  const navItems = [];
   const actionButton = { label: "Logout", path: "/logout" };
 
   useEffect(() => {
@@ -52,7 +51,9 @@ function AllQuestions() {
       } catch (err) {
         setError("Failed to fetch questions. Please try again.");
       } finally {
-        setLoading(false);
+        setTimeout(() => {
+          setLoading(false);
+        }, 1500);
       }
     };
 
@@ -101,13 +102,22 @@ function AllQuestions() {
     setShowModal(true);
   };
 
+  const handleCancelNewQuestion = () => {
+    setQuestionName("")
+    setWeight("")
+    setFile(null)
+    setShowModal(false)
+    setMappingError("")
+    setMappingLoading(false)
+  };
+
   const handleFileChange = (event) => {
     const uploadedFile = event.target.files[0];
     if (!uploadedFile) return;
-    
+
     // Check if the file type is PDF
     if (uploadedFile.type !== "application/pdf") {
-      setError("Only PDF files are allowed.");
+      setMappingError("Only PDF files are allowed.");
       setFile(null);
       return;
     }
@@ -116,9 +126,9 @@ function AllQuestions() {
   };
 
   const handleGetCoPoMapping = async () => {
-    if (!file) {
-      setError("Please upload a file before proceeding.");
-      return;
+    if(!questionName || !weight || !file){
+      setMappingError("Please fill in all the fields.")
+      return
     }
 
     try {
@@ -157,11 +167,14 @@ function AllQuestions() {
               questionData: response.data.data,
             },
           });
-        }, 500);
+        }, 1500);
       }
-    } catch (err) {
-      setError("Failed to get CO PO Mapping. Please try again.");
-      setMappingLoading(false);
+    } catch (error) {
+      setTimeout(()=>{
+        setMappingError(error.response?.data?.message);
+        setMappingLoading(false);
+      },1500)
+      
     }
   };
 
@@ -174,116 +187,236 @@ function AllQuestions() {
       />
 
       <div className="container mx-auto px-6 mt-24">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-xl font-bold">All Questions</h1>
-          <button
-            onClick={handleAddQuestion}
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-          >
-            Add a New Question
-          </button>
-          <button
-            onClick={() => handleTemplateFileDownload("docx")}
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-          >
-            Download DOCX Template
-          </button>
-          <button
-            onClick={() => handleTemplateFileDownload("zip")}
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
-          >
-            Download Latex Template
-          </button>
+        <div className="flex items-center justify-between mb-6">
+          {/* Title with fixed width */}
+          <h1 className="text-xl font-bold w-1/4">All Questions</h1>
+
+          {/* Buttons wrapper */}
+          <div className="flex gap-x-4">
+            <button
+              onClick={handleAddQuestion}
+              disabled={loading}
+              className={`bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] ${
+                loading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              Add a New Question
+            </button>
+            <button
+              onClick={() => handleTemplateFileDownload("docx")}
+              disabled={loading}
+              className={`bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] ${
+                loading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              Download DOCX Template
+            </button>
+            <button
+              onClick={() => handleTemplateFileDownload("zip")}
+              disabled={loading}
+              className={`bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] ${
+                loading ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+            >
+              Download Latex Template
+            </button>
+          </div>
         </div>
 
-        {loading ? (
-          <div className="text-center mt-10">Loading questions...</div>
-        ) : error ? (
-          <div className="text-red-500 text-center mt-10">{error}</div>
-        ) : questions.length > 0 ? (
-          <div className="flex flex-col space-y-4">
-            {questions.map((question, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-4 border rounded-lg shadow-sm hover:bg-gray-100 cursor-pointer"
-                onClick={() => handleQuestionClick(question)}
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="bg-gray-300 rounded-full w-10 h-10 flex items-center justify-center">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-6 w-6 text-gray-600"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <div className="container mx-auto px-6">
+              <div className="bg-white shadow-md rounded-lg p-6">
+                {/* List Skeleton */}
+                <div className="space-y-4">
+                  {[1, 2, 3, 4].map((_, index) => (
+                    <motion.div
+                      key={index}
+                      className="flex items-center space-x-4 p-4 bg-gray-200 rounded-lg animate-pulse"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M3 10h11M9 21V3m0 18c6.627 0 12-5.373 12-12 0-6.627-5.373-12-12-12S3 4.373 3 11c0 6.627 5.373 12 12 12z"
-                      />
-                    </svg>
-                  </div>
-                  <div className="text-lg font-semibold">{question.name}</div>
+                      {/* Icon Placeholder */}
+                      <div className="w-10 h-10 bg-gray-300 rounded-full"></div>
+
+                      {/* Text Placeholder */}
+                      <div className="flex-1 space-y-2">
+                        <div className="h-4 bg-gray-300 rounded w-3/4"></div>
+                        <div className="h-3 bg-gray-300 rounded w-1/2"></div>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-gray-500 text-center mt-10">
-            No questions available.
-          </div>
-        )}
+            </div>
+          ) : error ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+            >
+              <div className="text-red-500 text-center mt-10">{error}</div>
+            </motion.div>
+          ) : questions.length > 0 ? (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+            >
+              <div className="flex flex-col space-y-4">
+                {questions.map((question, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-4 border rounded-lg shadow-sm hover:bg-gray-100 cursor-pointer"
+                    onClick={() => handleQuestionClick(question)}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className="bg-gray-300 rounded-full w-10 h-10 flex items-center justify-center">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-6 w-6 text-gray-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 10h11M9 21V3m0 18c6.627 0 12-5.373 12-12 0-6.627-5.373-12-12-12S3 4.373 3 11c0 6.627 5.373 12 12 12z"
+                          />
+                        </svg>
+                      </div>
+                      <div className="text-lg font-semibold">
+                        {question.name}
+                      </div>
+                      <div className="text-lg font-semibold">
+                        {`(${question.weight}%)`}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4, ease: "easeInOut" }}
+            >
+              <div className="text-gray-500 text-center mt-10">
+                No questions available.
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-96">
-            <h2 className="text-lg font-bold mb-4">Upload Your Question</h2>
-            <input
-              type="text"
-              placeholder="Enter Question Name"
-              className="border p-2 w-full rounded mb-2"
-              value={questionName}
-              onChange={(e) => setQuestionName(e.target.value)}
-            />
-            <input
-              type="number"
-              placeholder="Enter Weight"
-              className="border p-2 w-full rounded mb-2"
-              value={weight}
-              onChange={(e) => setWeight(e.target.value)}
-            />
-            <input
-              type="file"
-              accept="application/pdf"
-              className="border p-2 w-full rounded mb-4"
-              onChange={handleFileChange}
-            />
-            <button
-              onClick={handleGetCoPoMapping}
-              disabled={mappingLoading}
-              className="bg-blue-500 text-white px-4 py-2 rounded-md w-full hover:bg-blue-600 disabled:opacity-50"
-            >
-              Get CO PO Mapping
-            </button>
-            {mappingLoading && (
-              <div className="flex items-center justify-center mt-4">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
-                <span className="ml-2 text-blue-500">
-                  Please wait, this may take a while.
-                </span>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        >
+          <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
+            <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm md:max-w-md">
+              <h2 className="text-lg font-bold mb-4">Upload Your Question</h2>
+              <label
+                htmlFor="question_name"
+                className="block font-bold text-left mb-1 text-black"
+              >
+                Question Name
+              </label>
+              <input
+                type="text"
+                spellCheck={false}
+                placeholder="Enter Question Name"
+                className="border p-2 w-full rounded mb-4"
+                value={questionName}
+                onChange={(e) => setQuestionName(e.target.value)}
+              />
+              <label
+                htmlFor="question_weight"
+                className="block font-bold text-left mb-1 text-black"
+              >
+                Question Weight
+              </label>
+              <input
+                type="number"
+                placeholder="Enter Weight"
+                min={1}
+                className="border p-2 w-full rounded mb-4"
+                value={weight}
+                onChange={(e) => setWeight(e.target.value)}
+              />
+              <label
+                htmlFor="pdf_file"
+                className="block font-bold text-left mb-1 text-black"
+              >
+                Question (The PDF file should follow the templates)
+              </label>
+              <input
+                type="file"
+                accept="application/pdf"
+                className="border p-2 w-full rounded mb-4"
+                onChange={handleFileChange}
+              />
+              {mappingError && <p className="text-red-500 text-sm mb-4 text-center font-bold">{mappingError}</p>}
+              
+              {/* Loader Spinner */}
+              {mappingLoading && (
+                <div className="flex justify-center mb-4">
+                  <svg
+                    className="animate-spin h-5 w-5 text-blue-500"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8H4z"
+                    ></path>
+                  </svg>
+                  <div className="mx-2">
+                    <span>Please wait...</span>
+                  </div>
+                </div>
+              )}
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={handleCancelNewQuestion}
+                  disabled={mappingLoading}
+                  className={`bg-gray-300 text-black py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-gray-400 ${
+                    mappingLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleGetCoPoMapping}
+                  disabled={mappingLoading}
+                  className={`bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] ${
+                    mappingLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                >
+                  Get CO PO Mapping
+                </button>
               </div>
-            )}
-            <button
-              className="mt-2 w-full text-red-500 hover:underline"
-              onClick={() => setShowModal(false)}
-            >
-              Close
-            </button>
+            </div>
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   );

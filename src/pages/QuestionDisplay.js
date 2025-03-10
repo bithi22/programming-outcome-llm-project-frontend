@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import Navbar from '../components/Navbar';
-
+import React, { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import axios from "axios";
+import Navbar from "../components/Navbar";
+import { motion, AnimatePresence } from "framer-motion";
 
 function QuestionDisplay() {
   const location = useLocation();
@@ -12,27 +12,42 @@ function QuestionDisplay() {
   const question_id = location.state?.question_id;
 
   const [question, setQuestion] = useState(null);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedName, setEditedName] = useState("");
+  const [editedWeight, setEditedWeight] = useState("");
+  const [editedMapping, setEditedMapping] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingUpdate, setLoadingUpdate] = useState(false);
+  const [loadingUpdateError, setLoadingUpdateError] = useState("");
 
-  const navItems = [
-    { label: 'Join Class', path: '/joinclass' },
-    { label: 'Generate Report', path: '/generatereport' },
+  const navItems = [];
+
+  const actionButton = { label: "Logout", path: "/logout" };
+
+  // Options for the dropdowns
+  const poOptions = Array.from({ length: 12 }, (_, i) => `PO${i + 1}`);
+  const cogDomainOptions = [
+    "Knowledge",
+    "Understanding",
+    "Analyzing",
+    "Applying",
+    "Creating",
+    "Evaluating",
   ];
 
-  const actionButton = { label: 'Logout', path: '/logout' };
-
   useEffect(() => {
-    console.log(classroom_id,question_id)
+    setIsLoading(true);
     if (!classroom_id || !question_id) {
-      setError('Classroom ID or Question ID not provided.');
+      setError("Classroom ID or Question ID not provided.");
       return;
     }
 
     const fetchQuestionDetails = async () => {
       try {
-        const token = localStorage.getItem('accessToken');
+        const token = localStorage.getItem("accessToken");
         if (!token) {
-          setError('You are not logged in. Please log in first.');
+          setError("You are not logged in. Please log in first.");
           return;
         }
 
@@ -44,127 +59,334 @@ function QuestionDisplay() {
             },
           }
         );
-
-        console.log('Question Details Response:', response.data.data);
-        setQuestion(response.data.data);
-      } catch (err) {
-        console.error('Failed to fetch question details:', err.response || err.message);
-        setError('Failed to fetch question details. Please try again.');
+        setTimeout(() => {
+          setIsLoading(false);
+          setQuestion(response.data.data);
+        }, 1500);
+      } catch (error) {
+        setTimeout(() => {
+          setIsLoading(false);
+          setError(error.response?.data?.message);
+        }, 1500);
       }
     };
 
     fetchQuestionDetails();
   }, [classroom_id, question_id]);
 
+  // Initialize edit fields when question loads or changes.
+  useEffect(() => {
+    if (question) {
+      setEditedName(question.name);
+      setEditedWeight(question.weight);
+      // Create a deep copy to avoid mutating the original
+      setEditedMapping(
+        JSON.parse(JSON.stringify(question.co_po_mapping || {}))
+      );
+    }
+  }, [question]);
+
   const handleGenerateResult = () => {
-    navigate('/questionresult', { state: { classroom_id, question, question_id } });
+    navigate("/questionresult", {
+      state: { classroom_id, question, question_id },
+    });
   };
 
   const handleShowResult = () => {
-    navigate('/showquestionreport', { state: { question_id, classroom_id, question_name : question.name } });
+    navigate("/showquestionreport", {
+      state: { question_id, classroom_id, question_name: question.name },
+    });
   };
 
+  // Helper functions for getting and updating mapping values from editedMapping based on the row id (e.g. "1" or "1.2" or "1.2.3")
+  const getMappingValue = (path, field) => {
+    let value = "";
+    if (!editedMapping) return value;
+    if (path.length === 1) {
+      value = editedMapping[path[0]]?.[field] || "";
+    } else if (path.length === 2) {
+      value =
+        editedMapping[path[0]]?.["sub-sections"]?.[path[1]]?.[field] || "";
+    } else if (path.length === 3) {
+      value =
+        editedMapping[path[0]]?.["sub-sections"]?.[path[1]]?.[
+          "sub-sub-sections"
+        ]?.[path[2]]?.[field] || "";
+    }
+    return value;
+  };
+
+  const updateMappingValue = (path, field, newValue) => {
+    setEditedMapping((prevMapping) => {
+      const newMapping = { ...prevMapping };
+      if (path.length === 1) {
+        newMapping[path[0]] = {
+          ...(newMapping[path[0]] || {}),
+          [field]: newValue,
+        };
+      } else if (path.length === 2) {
+        newMapping[path[0]] = {
+          ...newMapping[path[0]],
+          "sub-sections": {
+            ...((newMapping[path[0]] && newMapping[path[0]]["sub-sections"]) ||
+              {}),
+            [path[1]]: {
+              ...((newMapping[path[0]] &&
+                newMapping[path[0]]["sub-sections"] &&
+                newMapping[path[0]]["sub-sections"][path[1]]) ||
+                {}),
+              [field]: newValue,
+            },
+          },
+        };
+      } else if (path.length === 3) {
+        newMapping[path[0]] = {
+          ...newMapping[path[0]],
+          "sub-sections": {
+            ...((newMapping[path[0]] && newMapping[path[0]]["sub-sections"]) ||
+              {}),
+            [path[1]]: {
+              ...((newMapping[path[0]] &&
+                newMapping[path[0]]["sub-sections"] &&
+                newMapping[path[0]]["sub-sections"][path[1]]) ||
+                {}),
+              "sub-sub-sections": {
+                ...((newMapping[path[0]] &&
+                  newMapping[path[0]]["sub-sections"] &&
+                  newMapping[path[0]]["sub-sections"][path[1]] &&
+                  newMapping[path[0]]["sub-sections"][path[1]][
+                    "sub-sub-sections"
+                  ]) ||
+                  {}),
+                [path[2]]: {
+                  ...((newMapping[path[0]] &&
+                    newMapping[path[0]]["sub-sections"] &&
+                    newMapping[path[0]]["sub-sections"][path[1]] &&
+                    newMapping[path[0]]["sub-sections"][path[1]][
+                      "sub-sub-sections"
+                    ] &&
+                    newMapping[path[0]]["sub-sections"][path[1]][
+                      "sub-sub-sections"
+                    ][path[2]]) ||
+                    {}),
+                  [field]: newValue,
+                },
+              },
+            },
+          },
+        };
+      }
+      return newMapping;
+    });
+  };
+
+  // Modified renderMappings to use dropdowns in edit mode for PO and Cognitive Domain
+  // but only for rows that have marks.
   const renderMappings = () => {
     if (!question || !question.question_details) {
       return null;
     }
- 
-    console.log("Inside render mappings:");
-    console.log(question);
- 
+
     const rows = [];
 
-Object.entries(question.question_details).forEach(([key, value]) => {
-  if (!value || !value['sub-sections']) {
-    rows.push({
-      id: key,
-      description: (
-        <>
-          <strong>{key + ". "}</strong>{value?.description || ''}
-        </>
-      ),
-      PO: question?.co_po_mapping?.[key]?.PO || '',
-      "Cognitive Domain": question?.co_po_mapping?.[key]?.["Cognitive Domain"] || '',
-      marks: question?.co_po_mapping?.[key]?.marks || ''
-    });
-  } else {
-    rows.push({
-      id: key,
-      description: (
-        <>
-          <strong>{key + ". "}</strong>{value?.description || ''}
-        </>
-      ),
-      PO: '',
-      "Cognitive Domain": '',
-      marks: ''
-    });
-
-    Object.entries(value['sub-sections'] || {}).forEach(([subKey, subValue]) => {
-      if (!subValue || !subValue['sub-sub-sections']) {
+    Object.entries(question.question_details).forEach(([key, value]) => {
+      if (!value || !value["sub-sections"]) {
         rows.push({
-          id: `${key}.${subKey}`,
+          id: key,
           description: (
             <>
-              <strong>{subKey + ". "}</strong>{subValue?.description || ''}
+              <strong>{key + ". "}</strong>
+              {value?.description || ""}
             </>
           ),
-          PO: question?.co_po_mapping?.[key]?.['sub-sections']?.[subKey]?.PO || '',
-          "Cognitive Domain": question?.co_po_mapping?.[key]?.['sub-sections']?.[subKey]?.["Cognitive Domain"] || '',
-          marks: question?.co_po_mapping?.[key]?.['sub-sections']?.[subKey]?.marks || ''
+          PO: question?.co_po_mapping?.[key]?.PO || "",
+          "Cognitive Domain":
+            question?.co_po_mapping?.[key]?.["Cognitive Domain"] || "",
+          marks: question?.co_po_mapping?.[key]?.marks || "",
         });
       } else {
         rows.push({
-          id: `${key}.${subKey}`,
+          id: key,
           description: (
             <>
-              <strong>{subKey + ". "}</strong>{subValue?.description || ''}
+              <strong>{key + ". "}</strong>
+              {value?.description || ""}
             </>
           ),
-          PO: '',
-          "Cognitive Domain": '',
-          marks: ''
+          PO: "",
+          "Cognitive Domain": "",
+          marks: "",
         });
 
-        Object.entries(subValue['sub-sub-sections'] || {}).forEach(([sub_sub_key, sub_sub_value]) => {
-          rows.push({
-            id: `${key}.${subKey}.${sub_sub_key}`,
-            description: (
-              <>
-                <strong>{sub_sub_key + ". "}</strong>{sub_sub_value?.description || ''}
-              </>
-            ),
-            PO: question?.co_po_mapping?.[key]?.['sub-sections']?.[subKey]?.['sub-sub-sections']?.[sub_sub_key]?.PO || '',
-            "Cognitive Domain": question?.co_po_mapping?.[key]?.['sub-sections']?.[subKey]?.["sub-sub-sections"]?.[sub_sub_key]?.["Cognitive Domain"] || '',
-            marks: question?.co_po_mapping?.[key]?.['sub-sections']?.[subKey]?.["sub-sub-sections"]?.[sub_sub_key]?.marks || ''
-          });
-        });
+        Object.entries(value["sub-sections"] || {}).forEach(
+          ([subKey, subValue]) => {
+            if (!subValue || !subValue["sub-sub-sections"]) {
+              rows.push({
+                id: `${key}.${subKey}`,
+                description: (
+                  <>
+                    <strong>{subKey + ". "}</strong>
+                    {subValue?.description || ""}
+                  </>
+                ),
+                PO:
+                  question?.co_po_mapping?.[key]?.["sub-sections"]?.[subKey]
+                    ?.PO || "",
+                "Cognitive Domain":
+                  question?.co_po_mapping?.[key]?.["sub-sections"]?.[subKey]?.[
+                    "Cognitive Domain"
+                  ] || "",
+                marks:
+                  question?.co_po_mapping?.[key]?.["sub-sections"]?.[subKey]
+                    ?.marks || "",
+              });
+            } else {
+              rows.push({
+                id: `${key}.${subKey}`,
+                description: (
+                  <>
+                    <strong>{subKey + ". "}</strong>
+                    {subValue?.description || ""}
+                  </>
+                ),
+                PO: "",
+                "Cognitive Domain": "",
+                marks: "",
+              });
+
+              Object.entries(subValue["sub-sub-sections"] || {}).forEach(
+                ([sub_sub_key, sub_sub_value]) => {
+                  rows.push({
+                    id: `${key}.${subKey}.${sub_sub_key}`,
+                    description: (
+                      <>
+                        <strong>{sub_sub_key + ". "}</strong>
+                        {sub_sub_value?.description || ""}
+                      </>
+                    ),
+                    PO:
+                      question?.co_po_mapping?.[key]?.["sub-sections"]?.[
+                        subKey
+                      ]?.["sub-sub-sections"]?.[sub_sub_key]?.PO || "",
+                    "Cognitive Domain":
+                      question?.co_po_mapping?.[key]?.["sub-sections"]?.[
+                        subKey
+                      ]?.["sub-sub-sections"]?.[sub_sub_key]?.[
+                        "Cognitive Domain"
+                      ] || "",
+                    marks:
+                      question?.co_po_mapping?.[key]?.["sub-sections"]?.[
+                        subKey
+                      ]?.["sub-sub-sections"]?.[sub_sub_key]?.marks || "",
+                  });
+                }
+              );
+            }
+          }
+        );
       }
     });
-  }
-});
 
- 
-    return rows.map((row, index) => (
-      <tr key={index}>
-        <td className="px-4 py-2 border">
-          <div className="w-full" style={{ whiteSpace: 'pre-wrap' }}>
-            {row?.description || ''}
-          </div>
-        </td>
-        <td className="px-4 py-2 border">
-          <span>{row?.PO || ''}</span>
-        </td>
-        <td className="px-4 py-2 border">
-          <span>{row?.["Cognitive Domain"] || ''}</span>
-        </td>
-        <td className="px-4 py-2 border">
-          <span>{row?.marks || ''}</span>
-        </td>
-      </tr>
-    ));
+    return rows.map((row, index) => {
+      const path = row.id.split(".");
+      return (
+        <tr key={index}>
+          <td className="px-4 py-2 border">
+            <div className="w-full" style={{ whiteSpace: "pre-wrap" }}>
+              {row?.description || ""}
+            </div>
+          </td>
+          <td className="px-4 py-2 border">
+            {isEditing && row.marks ? (
+              <select
+                value={getMappingValue(path, "PO")}
+                onChange={(e) => updateMappingValue(path, "PO", e.target.value)}
+                className="border px-2 py-1"
+              >
+                <option value="">Select</option>
+                {poOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span>{getMappingValue(path, "PO") || row?.PO || ""}</span>
+            )}
+          </td>
+          <td className="px-4 py-2 border">
+            {isEditing && row.marks ? (
+              <select
+                value={getMappingValue(path, "Cognitive Domain")}
+                onChange={(e) =>
+                  updateMappingValue(path, "Cognitive Domain", e.target.value)
+                }
+                className="border px-2 py-1"
+              >
+                <option value="">Select</option>
+                {cogDomainOptions.map((option) => (
+                  <option key={option} value={option}>
+                    {option}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span>
+                {getMappingValue(path, "Cognitive Domain") ||
+                  row?.["Cognitive Domain"] ||
+                  ""}
+              </span>
+            )}
+          </td>
+          <td className="px-4 py-2 border">
+            <span>{row?.marks || ""}</span>
+          </td>
+        </tr>
+      );
+    });
   };
- 
+
+  const handleSaveChanges = async () => {
+    setLoadingUpdateError("");
+    if (!editedName || !editedWeight) {
+      setLoadingUpdateError("Question name or weight cannot be empty.");
+      return;
+    }
+    setLoadingUpdate(true);
+    try {
+      const token = localStorage.getItem("accessToken");
+      const payload = {
+        name: editedName,
+        weight: editedWeight,
+        co_po_mapping: editedMapping,
+        question_id: question_id,
+      };
+      const response = await axios.put(
+        "http://127.0.0.1:8000/question/update-co-po-mapping",
+        payload,
+        {
+          headers: { accessToken: token },
+        }
+      );
+      // Update the question state with edited values
+      setTimeout(() => {
+        setQuestion({
+          ...question,
+          name: editedName,
+          weight: editedWeight,
+          co_po_mapping: editedMapping,
+        });
+        setIsEditing(false);
+        setLoadingUpdate(false);
+      }, 1500);
+    } catch (error) {
+      setTimeout(() => {
+        setIsEditing(false);
+        setLoadingUpdateError(error.response?.data?.message);
+      }, 1500);
+    }
+  };
+
   if (!classroom_id || !question_id) {
     return (
       <div className="text-red-500 text-center mt-10">
@@ -180,44 +402,215 @@ Object.entries(question.question_details).forEach(([key, value]) => {
         actionButton={actionButton}
         buttonStyle="border border-red-500 text-red-500 py-2 px-4 rounded-md hover:bg-red-500 hover:text-white"
       />
-      <div className="container mx-auto px-6 mt-24">
-        <h1 className="text-xl font-bold mb-6">
-          {question?.name || 'No Question Name Provided'}
-        </h1>
 
-        <div>
-          <h2 className="text-lg font-semibold mb-4">CO-PO Mappings</h2>
-          <div className="mb-4">
-            <button
-              onClick={handleGenerateResult}
-              className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 mr-2"
-            >
-              Marksheet
-            </button>
-            {question?.report_submitted && (
-              <button
-                onClick={handleShowResult}
-                className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+      <AnimatePresence mode="wait">
+        {isLoading ? (
+          <div className="container mx-auto px-6 mt-24 mb-6">
+            <div className="bg-white shadow-md rounded-lg p-6">
+              <motion.div
+                className="animate-pulse"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
               >
-                Reports
-              </button>
-            )}
+                <div className="h-6 bg-gray-300 rounded w-1/3 mb-4"></div>
+                <div className="h-4 bg-gray-300 rounded w-1/2 mb-2"></div>
+                <div className="h-4 bg-gray-300 rounded w-1/4 mb-2"></div>
+              </motion.div>
+            </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="table-auto w-full text-left border border-gray-300">
-              <thead className="bg-black text-white">
-                <tr>
-                  <th className="px-4 py-2 border">Question</th>
-                  <th className="px-4 py-2 border">Mapped PO</th>
-                  <th className="px-4 py-2 border">Mapped Cognitive Domain</th>
-                  <th className="px-4 py-2 border">Marks</th>
-                </tr>
-              </thead>
-              <tbody>{renderMappings()}</tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
+          >
+            <div className="container mx-auto px-6 mt-24 mb-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  {isEditing ? (
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+                      <label
+                        htmlFor="question_name"
+                        className="block font-bold text-left text-black"
+                      >
+                        Question Name:
+                      </label>
+                      <input
+                        type="text"
+                        spellCheck={false}
+                        value={editedName}
+                        onChange={(e) => setEditedName(e.target.value)}
+                        className="p-2 w-64 border border-black rounded-md focus:outline-none"
+                      />
+                      <label
+                        htmlFor="weight"
+                        className="block font-bold text-left text-black"
+                      >
+                        Weight:
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="100"
+                        value={editedWeight}
+                        className="border p-2 w-24 border-black rounded-md focus:outline-none"
+                        onChange={(e) => {
+                          let newVal = e.target.value.trim();
+                          if (newVal === "") {
+                            setEditedWeight(newVal);
+                            return;
+                          }
+                          newVal = parseFloat(newVal);
+                          if (isNaN(newVal) || newVal < 1) {
+                            newVal = 1;
+                          }
+                          if(newVal>100){
+                            newVal = 100
+                          }
+                          setEditedWeight(newVal);
+                        }}
+                        onBlur={(e) => {
+                          let newVal = e.target.value.trim();
+                          if (newVal === "" || isNaN(parseFloat(newVal))) {
+                            setEditedWeight(1);
+                          }
+                        }}
+                      />
+                    </div>
+                  ) : (
+                    <h1 className="text-xl font-bold">
+                      {question?.name || "No Question Name Provided"}{" "}
+                      {question?.weight ? `(${question.weight}%)` : ""}
+                    </h1>
+                  )}
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={handleGenerateResult}
+                    disabled={isLoading}
+                    className={`bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] ${
+                      isLoading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                  >
+                    Marksheet
+                  </button>
+                  {question?.report_submitted && (
+                    <button
+                      onClick={handleShowResult}
+                      className={`bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC]`}
+                    >
+                      Reports
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold ">CO-PO Mappings</h2>
+                  {!isEditing && (
+                    <>
+                      <button
+                        onClick={() => setIsEditing(true)}
+                        disabled={isLoading}
+                        className="border-2 border-[#3941FF] text-[#3941FF] justify-end py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] hover:text-white hover:border-[#2C36CC] transition"
+                      >
+                        Edit Table
+                      </button>
+                    </>
+                  )}
+                  {isEditing && (
+                    <div className="flex items-center justify-end space-x-4">
+                      <button
+                        onClick={handleSaveChanges}
+                        disabled={loadingUpdate}
+                        className={`bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] ${
+                          loadingUpdate ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                      >
+                        Save Changes
+                      </button>
+                      <button
+                        onClick={() => {
+                          // Reset edits on cancel
+                          setIsEditing(false);
+                          setEditedName(question.name);
+                          setEditedWeight(question.weight);
+                          setEditedMapping(
+                            JSON.parse(
+                              JSON.stringify(question.co_po_mapping || {})
+                            )
+                          );
+                          setLoadingUpdateError("");
+                          setLoadingUpdate(false);
+                        }}
+                        disabled={loadingUpdate}
+                        className={`bg-gray-300 text-black py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-gray-400 ${
+                          loadingUpdate ? "opacity-50 cursor-not-allowed" : ""
+                        }`}
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {loadingUpdateError && (
+                  <p className="text-red-500 mb-4 font-bold">
+                    {loadingUpdateError}
+                  </p>
+                )}
+                {loadingUpdate && (
+                  <div className="flex justify-center mb-4">
+                    <svg
+                      className="animate-spin h-5 w-5 text-blue-500"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v8H4z"
+                      ></path>
+                    </svg>
+                    <div className="mx-2">
+                      <span>Please wait...</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="overflow-x-auto">
+                  <table className="table-auto w-full text-left border border-gray-300">
+                    <thead className="bg-black text-white">
+                      <tr>
+                        <th className="px-4 py-2 border">Question</th>
+                        <th className="px-4 py-2 border">Mapped PO</th>
+                        <th className="px-4 py-2 border">
+                          Mapped Cognitive Domain
+                        </th>
+                        <th className="px-4 py-2 border">Marks</th>
+                      </tr>
+                    </thead>
+                    <tbody>{renderMappings()}</tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

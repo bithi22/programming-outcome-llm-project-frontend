@@ -26,7 +26,7 @@ function Dashboard() {
   const navigate = useNavigate();
 
   const navItems = [
-    { label: 'Generate Report', path: '/report' },
+    { label: 'Semester Report', path: '/report' },
   ];
 
   const actionButton = { label: 'Logout', path: '/logout' };

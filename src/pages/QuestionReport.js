@@ -1,102 +1,47 @@
-// import React, { useState } from 'react';
-// import axios from 'axios';
-// import { jsPDF } from 'jspdf';
-// import autoTable from 'jspdf-autotable';
-// import Navbar from '../components/Navbar';
-// import { useLocation } from 'react-router-dom';
+// import React, { useState } from "react";
+// import axios from "axios";
+// import { jsPDF } from "jspdf";
+// import autoTable from "jspdf-autotable";
+// import Navbar from "../components/Navbar";
+// import { useLocation } from "react-router-dom";
+// // 1) Import XLSX
+// import * as XLSX from "xlsx";
 
 // function QuestionReport() {
-//   const location = useLocation()
-//   const {question_id, question_name} = location.state
-//   const [student_id, setstudent_id] = useState('');
+//   const location = useLocation();
+//   const { question_id, question_name } = location.state;
+
+//   const [student_id, setstudent_id] = useState("");
 //   const [reportData, setReportData] = useState(null);
 //   const [loading, setLoading] = useState(false);
 //   const [error, setError] = useState(null);
-//   const [studentReport,setStudentReport] = useState(false)
-//   const [averageReport,setAverageReport] = useState(false)
-//   const [overallReport,setOverallReport] = useState(false)
+
+//   // Toggles for different report types
+//   const [studentReport, setStudentReport] = useState(false);
+//   const [averageReport, setAverageReport] = useState(false);
+//   const [overallReport, setOverallReport] = useState(false);
 
 //   const navItems = [
-//     { label: 'Join Class', path: '/joinclass' },
-//     { label: 'Generate Report', path: '/generatereport' },
+//     { label: "Join Class", path: "/joinclass" },
+//     { label: "Generate Report", path: "/generatereport" },
 //   ];
+//   const actionButton = { label: "Logout", path: "/logout" };
 
-//   const actionButton = { label: 'Logout', path: '/logout' };
-
-//   const downloadPDF = () => {
-//     const doc = new jsPDF();
-
-//     // Set title
-//     doc.setFontSize(16);
-//     doc.text(`Report for: ${question_name}`, doc.internal.pageSize.getWidth() / 2, 20, { align: "center" });
-
-//     // Student ID
-//     doc.setFontSize(14);
-//     if(studentReport){
-//       doc.text(`Student ID: ${student_id}`, doc.internal.pageSize.getWidth() / 2, 30, { align: "center" });
-//     }
-//     else if(averageReport){
-//       doc.text(`Average Report`, doc.internal.pageSize.getWidth() / 2, 30, { align: "center" });
-//     }
-
-//     // Define starting y position for tables
-//     let yPosition = 50;
-
-//     // PO Grades Table
-//     if (reportData.po_grades && Object.keys(reportData.po_grades).length > 0) {
-//       doc.setFontSize(12);
-//       doc.text("PO Grades", doc.internal.pageSize.getWidth() / 2, yPosition, { align: "center" });
-
-//       yPosition += 5;
-
-//       autoTable(doc,{
-//         startY: yPosition + 5,
-//         head: [["PO", "Grade (%)"]],
-//         body: Object.entries(reportData.po_grades).map(([key, value]) => [key, `${value}%`]),
-//         theme: "grid",
-//         styles: { halign: "center" },
-//       })
-
-//       yPosition = doc.lastAutoTable.finalY + 10;
-//     }
-
-//     // Cognitive Grades Table
-//     if (reportData.cognitive_grades && Object.keys(reportData.cognitive_grades).length > 0) {
-//       doc.setFontSize(12);
-//       doc.text("Cognitive Grades", doc.internal.pageSize.getWidth() / 2, yPosition, { align: "center" });
-
-//       yPosition += 5;
-
-//       autoTable(doc,{
-//         startY: yPosition + 5,
-//         head: [["Category", "Grade (%)"]],
-//         body: Object.entries(reportData.cognitive_grades).map(([key, value]) => [key, `${value}%`]),
-//         theme: "grid",
-//         styles: { halign: "center" },
-//       });
-//     }
-
-//     // Save the PDF
-//     if(studentReport){
-//       doc.save(`Report_${student_id}.pdf`);
-//     }
-//     else if(averageReport){
-//       doc.save(`Average Report.pdf`);
-//     }
-//   };
-
+//   // ------------------------------
+//   // FETCHING FUNCTIONS
+//   // ------------------------------
 //   const fetchStudentReport = async () => {
 //     if (!student_id) {
-//       setError('Please enter a valid Student ID.');
+//       setError("Please enter a valid Student ID.");
 //       return;
 //     }
 
 //     setLoading(true);
 //     setError(null);
-//     const token = localStorage.getItem('accessToken');
+//     const token = localStorage.getItem("accessToken");
 
 //     if (!token) {
-//       setError('Access token not found.');
+//       setError("Access token not found.");
 //       setLoading(false);
 //       return;
 //     }
@@ -111,16 +56,16 @@
 
 //       if (response.data.success) {
 //         setReportData(response.data.data);
-//         setStudentReport(true)
-//         setAverageReport(false)
-//         setOverallReport(false)
+//         setStudentReport(true);
+//         setAverageReport(false);
+//         setOverallReport(false);
 //       } else {
-//         setError('Failed to fetch report.');
-//         setReportData(null)
+//         setError("Failed to fetch report.");
+//         setReportData(null);
 //       }
 //     } catch (err) {
-//       setError('Error while fetching report.');
-//       setReportData(null)
+//       setError("Error while fetching report.");
+//       setReportData(null);
 //     } finally {
 //       setLoading(false);
 //     }
@@ -129,10 +74,10 @@
 //   const fetchAverageReport = async () => {
 //     setLoading(true);
 //     setError(null);
-//     const token = localStorage.getItem('accessToken');
+//     const token = localStorage.getItem("accessToken");
 
 //     if (!token) {
-//       setError('Access token not found.');
+//       setError("Access token not found.");
 //       setLoading(false);
 //       return;
 //     }
@@ -147,21 +92,253 @@
 
 //       if (response.data.success) {
 //         setReportData(response.data.data);
-//         setStudentReport(false)
-//         setAverageReport(true)
-//         setOverallReport(false)
+//         setStudentReport(false);
+//         setAverageReport(true);
+//         setOverallReport(false);
 //       } else {
-//         setError('Failed to fetch report.');
-//         setReportData(null)
+//         setError("Failed to fetch report.");
+//         setReportData(null);
 //       }
 //     } catch (err) {
-//       setError('Error while fetching report.');
-//       setReportData(null)
+//       setError("Error while fetching report.");
+//       setReportData(null);
 //     } finally {
 //       setLoading(false);
 //     }
 //   };
 
+//   // 2) NEW: Fetch Overall Report
+//   const fetchOverallReport = async () => {
+//     setLoading(true);
+//     setError(null);
+//     const token = localStorage.getItem("accessToken");
+
+//     if (!token) {
+//       setError("Access token not found.");
+//       setLoading(false);
+//       return;
+//     }
+
+//     try {
+//       const response = await axios.get(
+//         `http://127.0.0.1:8000/report/question/${question_id}/overall`,
+//         {
+//           headers: { accessToken: token },
+//         }
+//       );
+
+//       if (response.data.success) {
+//         // NOTE: This data is an array of objects, each keyed by student ID
+//         setReportData(response.data.data);
+//         setStudentReport(false);
+//         setAverageReport(false);
+//         setOverallReport(true);
+//       } else {
+//         setError("Failed to fetch overall report.");
+//         setReportData(null);
+//       }
+//     } catch (err) {
+//       setError("Error while fetching overall report.");
+//       setReportData(null);
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   // ------------------------------
+//   // DOWNLOAD HANDLER
+//   // ------------------------------
+//   const downloadReport = () => {
+//     // If Overall Report => download XLSX
+//     if (overallReport && reportData && reportData.length > 0) {
+//       // 1) Figure out dynamic keys from the first student
+//       const firstItem = reportData[0];
+//       const firstStudentId = Object.keys(firstItem)[0];
+//       const { po_grades: firstPo, cognitive_grades: firstCog } = firstItem[firstStudentId];
+//       const poKeys = Object.keys(firstPo);     // e.g. ["PO2", "PO8", "PO3", ...]
+//       const cogKeys = Object.keys(firstCog);   // e.g. ["Analyzing", "Evaluating", "Knowledge", ...]
+    
+//       // 2) Build the 2D array for the sheet
+    
+//       // Row 0: top-level headers
+//       // "Student ID" + "PO" (with placeholders) + "Cognitive Domain" (with placeholders)
+//       const row0 = ["Student ID"];
+//       // Put "PO"
+//       row0.push("PO%");
+//       // Fill placeholders for the rest of the PO columns - 1
+//       for (let i = 1; i < poKeys.length; i++) {
+//         row0.push("");
+//       }
+//       // Put "Cognitive Domain"
+//       row0.push("Cognitive Domain%");
+//       // Fill placeholders for the rest of the Cognitive columns - 1
+//       for (let i = 1; i < cogKeys.length; i++) {
+//         row0.push("");
+//       }
+    
+//       // Row 1: sub-headers (empty cell under "Student ID", then all poKeys, then all cogKeys)
+//       const row1 = [""].concat(poKeys, cogKeys);
+    
+//       // Start with these two header rows
+//       const sheetData = [row0, row1];
+    
+//       // 3) Now append each student's data
+//       //    [ studentId, ...poKeys, ...cogKeys ]
+//       reportData.forEach((item) => {
+//         const studentId = Object.keys(item)[0];
+//         const { po_grades, cognitive_grades } = item[studentId];
+    
+//         // Build the row
+//         const row = [
+//           studentId,
+//           ...poKeys.map((poKey) => po_grades[poKey]),
+//           ...cogKeys.map((cogKey) => cognitive_grades[cogKey]),
+//         ];
+//         sheetData.push(row);
+//       });
+    
+//       // 4) Convert to worksheet
+//       const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    
+//       // 5) Add merges for the multi-level header
+//       // "Student ID" merges from row 0 col 0 to row 1 col 0
+//       // "PO" merges from row 0 col 1 to row 0 col (1 + poKeys.length - 1)
+//       // "Cognitive Domain" merges from row 0 col (1 + poKeys.length) to row 0 col (1 + poKeys.length + cogKeys.length - 1)
+//       ws["!merges"] = [
+//         { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, // Student ID
+//         {
+//           s: { r: 0, c: 1 },
+//           e: { r: 0, c: 1 + poKeys.length - 1 },
+//         },
+//         {
+//           s: { r: 0, c: 1 + poKeys.length },
+//           e: { r: 0, c: 1 + poKeys.length + cogKeys.length - 1 },
+//         },
+//       ];
+    
+//       // 6) (Optional) Style the two header rows
+//       //    e.g. Gray background, center alignment, thin borders
+//       const totalHeaderCols = 1 + poKeys.length + cogKeys.length; // total columns in row 0 & 1
+//       for (let R = 0; R < 2; ++R) {
+//         for (let C = 0; C < totalHeaderCols; ++C) {
+//           const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+//           if (!ws[cellAddress]) continue;
+//           ws[cellAddress].s = {
+//             fill: { fgColor: { rgb: "D3D3D3" } }, // light gray
+//             alignment: { horizontal: "center", vertical: "center" },
+//             border: {
+//               top:    { style: "thin", color: { rgb: "000000" } },
+//               bottom: { style: "thin", color: { rgb: "000000" } },
+//               left:   { style: "thin", color: { rgb: "000000" } },
+//               right:  { style: "thin", color: { rgb: "000000" } },
+//             },
+//           };
+//         }
+//       }
+    
+//       // 7) Create a new workbook & download
+//       const wb = XLSX.utils.book_new();
+//       XLSX.utils.book_append_sheet(wb, ws, "Overall Report");
+//       XLSX.writeFile(wb, "Overall_Report.xlsx");
+//       return;
+//     }
+    
+
+//     // Otherwise => download PDF (Student or Average Report)
+//     const doc = new jsPDF();
+
+//     // Set title
+//     doc.setFontSize(16);
+//     doc.text(
+//       `Report for: ${question_name}`,
+//       doc.internal.pageSize.getWidth() / 2,
+//       20,
+//       {
+//         align: "center",
+//       }
+//     );
+
+//     // Student or Average header
+//     doc.setFontSize(14);
+//     if (studentReport) {
+//       doc.text(
+//         `Student ID: ${student_id}`,
+//         doc.internal.pageSize.getWidth() / 2,
+//         30,
+//         {
+//           align: "center",
+//         }
+//       );
+//     } else if (averageReport) {
+//       doc.text("Average Report", doc.internal.pageSize.getWidth() / 2, 30, {
+//         align: "center",
+//       });
+//     }
+
+//     let yPosition = 50;
+
+//     // PO Grades Table
+//     if (reportData.po_grades && Object.keys(reportData.po_grades).length > 0) {
+//       doc.setFontSize(12);
+//       doc.text("PO Grades", doc.internal.pageSize.getWidth() / 2, yPosition, {
+//         align: "center",
+//       });
+
+//       yPosition += 5;
+
+//       autoTable(doc, {
+//         startY: yPosition + 5,
+//         head: [["PO", "Grade (%)"]],
+//         body: Object.entries(reportData.po_grades).map(([key, value]) => [
+//           key,
+//           `${value}%`,
+//         ]),
+//         theme: "grid",
+//         styles: { halign: "center" },
+//       });
+
+//       yPosition = doc.lastAutoTable.finalY + 10;
+//     }
+
+//     // Cognitive Grades Table
+//     if (
+//       reportData.cognitive_grades &&
+//       Object.keys(reportData.cognitive_grades).length > 0
+//     ) {
+//       doc.setFontSize(12);
+//       doc.text(
+//         "Cognitive Grades",
+//         doc.internal.pageSize.getWidth() / 2,
+//         yPosition,
+//         {
+//           align: "center",
+//         }
+//       );
+
+//       yPosition += 5;
+
+//       autoTable(doc, {
+//         startY: yPosition + 5,
+//         head: [["Category", "Grade (%)"]],
+//         body: Object.entries(reportData.cognitive_grades).map(
+//           ([key, value]) => [key, `${value}%`]
+//         ),
+//         theme: "grid",
+//         styles: { halign: "center" },
+//       });
+//     }
+
+//     // Finally, save the PDF
+//     if (studentReport) {
+//       doc.save(`Report_${student_id}.pdf`);
+//     } else if (averageReport) {
+//       doc.save(`Average_Report.pdf`);
+//     }
+//   };
+
+//   // ------------------------------
+//   // RENDER
+//   // ------------------------------
 //   return (
 //     <div>
 //       <Navbar
@@ -190,69 +367,212 @@
 //           >
 //             Get Average Report
 //           </button>
+
+//           {/* 3) NEW: Overall Report Button */}
+//           <button
+//             onClick={fetchOverallReport}
+//             className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+//           >
+//             Get Overall Report
+//           </button>
+
+//           {/* Show Download button only if we have reportData */}
 //           {reportData && (
 //             <button
-//             onClick={downloadPDF}
-//             className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
-//           >
-//             Download Report
-//           </button>
+//               onClick={downloadReport}
+//               className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+//             >
+//               Download Report
+//             </button>
 //           )}
 //         </div>
 
 //         {loading && <p>Loading report...</p>}
 //         {error && <p className="text-red-500">{error}</p>}
 
-//         {reportData && (
+//         {/* STUDENT / AVERAGE REPORTS */}
+//         {reportData && (studentReport || averageReport) && (
 //           <div className="mt-6 flex flex-col items-center w-full">
-//           <div className="w-full max-w-2xl">
-//             {studentReport && (
-//             <h2 className="text-xl font-bold mb-2 text-center">{`Report of Student ID : ${student_id}`}</h2>
-//             )}
-//             {averageReport && (
-//             <h2 className="text-xl font-bold mb-2 text-center">{`Average Report`}</h2>
-//             )}
-//             <h2 className="text-xl font-bold mb-2 text-center">PO Grades</h2>
-//             <table className="table-fixed w-full border-collapse border border-gray-300 mb-4">
-//               <thead>
-//                 <tr>
-//                   <th className="border border-gray-300 px-4 py-2 w-1/2 text-center">PO</th>
-//                   <th className="border border-gray-300 px-4 py-2 w-1/2 text-center">Grade (%)</th>
-//                 </tr>
-//               </thead>
-//               <tbody>
-//                 {Object.entries(reportData.po_grades).map(([key, value]) => (
-//                   <tr key={key}>
-//                     <td className="border border-gray-300 px-4 py-2 text-center">{key}</td>
-//                     <td className="border border-gray-300 px-4 py-2 text-center">{value}</td>
-//                   </tr>
-//                 ))}
-//               </tbody>
-//             </table>
-//           </div>
+//             <div className="w-full max-w-2xl">
+//               {studentReport && (
+//                 <h2 className="text-xl font-bold mb-2 text-center">
+//                   {`Report of Student ID : ${student_id}`}
+//                 </h2>
+//               )}
+//               {averageReport && (
+//                 <h2 className="text-xl font-bold mb-2 text-center">
+//                   Average Report
+//                 </h2>
+//               )}
 
-//           <div className="w-full max-w-2xl mt-4">
-//             <h2 className="text-xl font-bold mb-2 text-center">Cognitive Grades</h2>
-//             <table className="table-fixed w-full border-collapse border border-gray-300 mb-4">
-//               <thead>
-//                 <tr>
-//                   <th className="border border-gray-300 px-4 py-2 w-1/2 text-center">Cognitive Domain</th>
-//                   <th className="border border-gray-300 px-4 py-2 w-1/2 text-center">Grade (%)</th>
-//                 </tr>
-//               </thead>
-//               <tbody>
-//                 {Object.entries(reportData.cognitive_grades).map(([key, value]) => (
-//                   <tr key={key}>
-//                     <td className="border border-gray-300 px-4 py-2 text-center">{key}</td>
-//                     <td className="border border-gray-300 px-4 py-2 text-center">{value}</td>
+//               <h2 className="text-xl font-bold mb-2 text-center">PO Grades</h2>
+//               <table className="table-fixed w-full border-collapse border border-gray-300 mb-4">
+//                 <thead>
+//                   <tr>
+//                     <th className="border border-gray-300 px-4 py-2 w-1/2 text-center">
+//                       PO
+//                     </th>
+//                     <th className="border border-gray-300 px-4 py-2 w-1/2 text-center">
+//                       Grade (%)
+//                     </th>
 //                   </tr>
-//                 ))}
-//               </tbody>
-//             </table>
+//                 </thead>
+//                 <tbody>
+//                   {Object.entries(reportData.po_grades).map(([key, value]) => (
+//                     <tr key={key}>
+//                       <td className="border border-gray-300 px-4 py-2 text-center">
+//                         {key}
+//                       </td>
+//                       <td className="border border-gray-300 px-4 py-2 text-center">
+//                         {value}
+//                       </td>
+//                     </tr>
+//                   ))}
+//                 </tbody>
+//               </table>
+//             </div>
+
+//             <div className="w-full max-w-2xl mt-4">
+//               <h2 className="text-xl font-bold mb-2 text-center">
+//                 Cognitive Grades
+//               </h2>
+//               <table className="table-fixed w-full border-collapse border border-gray-300 mb-4">
+//                 <thead>
+//                   <tr>
+//                     <th className="border border-gray-300 px-4 py-2 w-1/2 text-center">
+//                       Cognitive Domain
+//                     </th>
+//                     <th className="border border-gray-300 px-4 py-2 w-1/2 text-center">
+//                       Grade (%)
+//                     </th>
+//                   </tr>
+//                 </thead>
+//                 <tbody>
+//                   {Object.entries(reportData.cognitive_grades).map(
+//                     ([key, value]) => (
+//                       <tr key={key}>
+//                         <td className="border border-gray-300 px-4 py-2 text-center">
+//                           {key}
+//                         </td>
+//                         <td className="border border-gray-300 px-4 py-2 text-center">
+//                           {value}
+//                         </td>
+//                       </tr>
+//                     )
+//                   )}
+//                 </tbody>
+//               </table>
+//             </div>
 //           </div>
-//         </div>
 //         )}
-//         <div className='mt-6'></div>
+
+//         {reportData && overallReport && reportData.length > 0 && (
+//           <div className="mt-6">
+//             <h2 className="text-xl font-bold mb-4 text-center">
+//               Overall Report
+//             </h2>
+//             <div className="overflow-x-auto">
+//               {/* 1. Get the first student's structure to figure out the keys */}
+//               {(() => {
+//                 const firstItem = reportData[0];
+//                 const firstStudentId = Object.keys(firstItem)[0];
+//                 const { po_grades: firstPo, cognitive_grades: firstCog } =
+//                   firstItem[firstStudentId];
+//                 const poKeys = Object.keys(firstPo); // e.g. ["PO2", "PO8", "PO3", ...]
+//                 const cogKeys = Object.keys(firstCog); // e.g. ["Analyzing", "Evaluating", "Knowledge", ...]
+
+//                 return (
+//                   <table className="table-auto w-full border-collapse border border-gray-300">
+//                     <thead className="bg-gray-300">
+//                       {/* Top row of the header */}
+//                       <tr>
+//                         {/* "Student ID" occupies 2 rows */}
+//                         <th
+//                           rowSpan={2}
+//                           className="border border-gray-300 px-4 py-2 text-center"
+//                         >
+//                           Student ID
+//                         </th>
+
+//                         {/* "PO" spans however many PO keys exist */}
+//                         <th
+//                           colSpan={poKeys.length}
+//                           className="border border-gray-300 px-4 py-2 text-center"
+//                         >
+//                           PO%
+//                         </th>
+
+//                         {/* "Cognitive Domain" spans however many Cognitive keys exist */}
+//                         <th
+//                           colSpan={cogKeys.length}
+//                           className="border border-gray-300 px-4 py-2 text-center"
+//                         >
+//                           Cognitive Domain%
+//                         </th>
+//                       </tr>
+
+//                       {/* Second row of the header: each PO key, then each cognitive key */}
+//                       <tr>
+//                         {poKeys.map((poKey) => (
+//                           <th
+//                             key={poKey}
+//                             className="border border-gray-300 px-4 py-2 text-center"
+//                           >
+//                             {poKey}
+//                           </th>
+//                         ))}
+//                         {cogKeys.map((cogKey) => (
+//                           <th
+//                             key={cogKey}
+//                             className="border border-gray-300 px-4 py-2 text-center"
+//                           >
+//                             {cogKey}
+//                           </th>
+//                         ))}
+//                       </tr>
+//                     </thead>
+
+//                     <tbody>
+//                       {reportData.map((item) => {
+//                         const studentId = Object.keys(item)[0];
+//                         const { po_grades, cognitive_grades } = item[studentId];
+
+//                         return (
+//                           <tr key={studentId}>
+//                             {/* Student ID */}
+//                             <td className="border border-gray-300 px-4 py-2 text-center">
+//                               {studentId}
+//                             </td>
+
+//                             {/* PO columns */}
+//                             {poKeys.map((poKey) => (
+//                               <td
+//                                 key={poKey}
+//                                 className="border border-gray-300 px-4 py-2 text-center"
+//                               >
+//                                 {po_grades[poKey]}
+//                               </td>
+//                             ))}
+
+//                             {/* Cognitive columns */}
+//                             {cogKeys.map((cogKey) => (
+//                               <td
+//                                 key={cogKey}
+//                                 className="border border-gray-300 px-4 py-2 text-center"
+//                               >
+//                                 {cognitive_grades[cogKey]}
+//                               </td>
+//                             ))}
+//                           </tr>
+//                         );
+//                       })}
+//                     </tbody>
+//                   </table>
+//                 );
+//               })()}
+//             </div>
+//           </div>
+//         )}
 //       </div>
 //     </div>
 //   );
@@ -260,14 +580,18 @@
 
 // export default QuestionReport;
 
-import React, { useState } from "react";
+
+
+import React, { useState, useRef } from "react";
 import axios from "axios";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import Navbar from "../components/Navbar";
 import { useLocation } from "react-router-dom";
-// 1) Import XLSX
+// XLSX for overall report
 import * as XLSX from "xlsx";
+// Import the BarChart component
+import BarChart from "../components/BarChart";
 
 function QuestionReport() {
   const location = useLocation();
@@ -284,10 +608,12 @@ function QuestionReport() {
   const [overallReport, setOverallReport] = useState(false);
 
   const navItems = [
-    { label: "Join Class", path: "/joinclass" },
-    { label: "Generate Report", path: "/generatereport" },
   ];
   const actionButton = { label: "Logout", path: "/logout" };
+
+  // Refs for the bar chart components (for PDF capture)
+  const poChartRef = useRef(null);
+  const cogChartRef = useRef(null);
 
   // ------------------------------
   // FETCHING FUNCTIONS
@@ -317,6 +643,7 @@ function QuestionReport() {
       );
 
       if (response.data.success) {
+        // Note: Now data has { summary, grades }
         setReportData(response.data.data);
         setStudentReport(true);
         setAverageReport(false);
@@ -353,6 +680,7 @@ function QuestionReport() {
       );
 
       if (response.data.success) {
+        // Now response.data.data contains { summary, grades }
         setReportData(response.data.data);
         setStudentReport(false);
         setAverageReport(true);
@@ -369,7 +697,7 @@ function QuestionReport() {
     }
   };
 
-  // 2) NEW: Fetch Overall Report
+  // Fetch Overall Report (remains unchanged)
   const fetchOverallReport = async () => {
     setLoading(true);
     setError(null);
@@ -390,7 +718,7 @@ function QuestionReport() {
       );
 
       if (response.data.success) {
-        // NOTE: This data is an array of objects, each keyed by student ID
+        // Data is an array of objects keyed by student ID
         setReportData(response.data.data);
         setStudentReport(false);
         setAverageReport(false);
@@ -411,150 +739,102 @@ function QuestionReport() {
   // DOWNLOAD HANDLER
   // ------------------------------
   const downloadReport = () => {
-    // If Overall Report => download XLSX
+    // Overall Report remains XLSX download (unchanged)
     if (overallReport && reportData && reportData.length > 0) {
-      // 1) Figure out dynamic keys from the first student
+      // ...existing XLSX generation code...
       const firstItem = reportData[0];
       const firstStudentId = Object.keys(firstItem)[0];
       const { po_grades: firstPo, cognitive_grades: firstCog } = firstItem[firstStudentId];
-      const poKeys = Object.keys(firstPo);     // e.g. ["PO2", "PO8", "PO3", ...]
-      const cogKeys = Object.keys(firstCog);   // e.g. ["Analyzing", "Evaluating", "Knowledge", ...]
-    
-      // 2) Build the 2D array for the sheet
-    
-      // Row 0: top-level headers
-      // "Student ID" + "PO" (with placeholders) + "Cognitive Domain" (with placeholders)
+      const poKeys = Object.keys(firstPo);
+      const cogKeys = Object.keys(firstCog);
+
       const row0 = ["Student ID"];
-      // Put "PO"
       row0.push("PO%");
-      // Fill placeholders for the rest of the PO columns - 1
       for (let i = 1; i < poKeys.length; i++) {
         row0.push("");
       }
-      // Put "Cognitive Domain"
       row0.push("Cognitive Domain%");
-      // Fill placeholders for the rest of the Cognitive columns - 1
       for (let i = 1; i < cogKeys.length; i++) {
         row0.push("");
       }
-    
-      // Row 1: sub-headers (empty cell under "Student ID", then all poKeys, then all cogKeys)
+
       const row1 = [""].concat(poKeys, cogKeys);
-    
-      // Start with these two header rows
       const sheetData = [row0, row1];
-    
-      // 3) Now append each student's data
-      //    [ studentId, ...poKeys, ...cogKeys ]
+
       reportData.forEach((item) => {
         const studentId = Object.keys(item)[0];
         const { po_grades, cognitive_grades } = item[studentId];
-    
-        // Build the row
-        const row = [
-          studentId,
-          ...poKeys.map((poKey) => po_grades[poKey]),
-          ...cogKeys.map((cogKey) => cognitive_grades[cogKey]),
-        ];
+        const row = [studentId, ...poKeys.map((poKey) => po_grades[poKey]), ...cogKeys.map((cogKey) => cognitive_grades[cogKey])];
         sheetData.push(row);
       });
-    
-      // 4) Convert to worksheet
+
       const ws = XLSX.utils.aoa_to_sheet(sheetData);
-    
-      // 5) Add merges for the multi-level header
-      // "Student ID" merges from row 0 col 0 to row 1 col 0
-      // "PO" merges from row 0 col 1 to row 0 col (1 + poKeys.length - 1)
-      // "Cognitive Domain" merges from row 0 col (1 + poKeys.length) to row 0 col (1 + poKeys.length + cogKeys.length - 1)
       ws["!merges"] = [
-        { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, // Student ID
-        {
-          s: { r: 0, c: 1 },
-          e: { r: 0, c: 1 + poKeys.length - 1 },
-        },
-        {
-          s: { r: 0, c: 1 + poKeys.length },
-          e: { r: 0, c: 1 + poKeys.length + cogKeys.length - 1 },
-        },
+        { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } },
+        { s: { r: 0, c: 1 }, e: { r: 0, c: 1 + poKeys.length - 1 } },
+        { s: { r: 0, c: 1 + poKeys.length }, e: { r: 0, c: 1 + poKeys.length + cogKeys.length - 1 } },
       ];
-    
-      // 6) (Optional) Style the two header rows
-      //    e.g. Gray background, center alignment, thin borders
-      const totalHeaderCols = 1 + poKeys.length + cogKeys.length; // total columns in row 0 & 1
+
+      const totalHeaderCols = 1 + poKeys.length + cogKeys.length;
       for (let R = 0; R < 2; ++R) {
         for (let C = 0; C < totalHeaderCols; ++C) {
           const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
           if (!ws[cellAddress]) continue;
           ws[cellAddress].s = {
-            fill: { fgColor: { rgb: "D3D3D3" } }, // light gray
+            fill: { fgColor: { rgb: "D3D3D3" } },
             alignment: { horizontal: "center", vertical: "center" },
             border: {
-              top:    { style: "thin", color: { rgb: "000000" } },
+              top: { style: "thin", color: { rgb: "000000" } },
               bottom: { style: "thin", color: { rgb: "000000" } },
-              left:   { style: "thin", color: { rgb: "000000" } },
-              right:  { style: "thin", color: { rgb: "000000" } },
+              left: { style: "thin", color: { rgb: "000000" } },
+              right: { style: "thin", color: { rgb: "000000" } },
             },
           };
         }
       }
-    
-      // 7) Create a new workbook & download
+
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Overall Report");
       XLSX.writeFile(wb, "Overall_Report.xlsx");
       return;
     }
-    
 
-    // Otherwise => download PDF (Student or Average Report)
+    // For Student and Average Reports, include summary and charts in the PDF.
     const doc = new jsPDF();
+    const margin = 15;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
 
     // Set title
     doc.setFontSize(16);
-    doc.text(
-      `Report for: ${question_name}`,
-      doc.internal.pageSize.getWidth() / 2,
-      20,
-      {
-        align: "center",
-      }
-    );
+    doc.text(`Report for: ${question_name}`, pageWidth / 2, 20, { align: "center" });
 
-    // Student or Average header
-    doc.setFontSize(14);
     if (studentReport) {
-      doc.text(
-        `Student ID: ${student_id}`,
-        doc.internal.pageSize.getWidth() / 2,
-        30,
-        {
-          align: "center",
-        }
-      );
+      doc.text(`Student ID: ${student_id}`, pageWidth / 2, 30, { align: "center" });
     } else if (averageReport) {
-      doc.text("Average Report", doc.internal.pageSize.getWidth() / 2, 30, {
-        align: "center",
-      });
+      doc.text("Average Report", pageWidth / 2, 30, { align: "center" });
     }
 
-    let yPosition = 50;
-
-    // PO Grades Table
-    if (reportData.po_grades && Object.keys(reportData.po_grades).length > 0) {
+    // Add summary if available, left-aligned with text wrapping
+    let yPosition = 40;
+    if (reportData.summary) {
       doc.setFontSize(12);
-      doc.text("PO Grades", doc.internal.pageSize.getWidth() / 2, yPosition, {
-        align: "center",
-      });
+      const summaryText = `Summary: ${reportData.summary}`;
+      const splitSummary = doc.splitTextToSize(summaryText, pageWidth - margin * 2);
+      doc.text(splitSummary, margin, yPosition, { align: "left" });
+      yPosition += splitSummary.length * 10 + 5; // adjust based on number of lines
+    }
 
+    // PO Grades Table using the new grades field
+    if (reportData.grades?.po_grades && Object.keys(reportData.grades.po_grades).length > 0) {
+      doc.setFontSize(12);
+      doc.text("PO Grades", pageWidth / 2, yPosition, { align: "center" });
       yPosition += 5;
 
       autoTable(doc, {
         startY: yPosition + 5,
         head: [["PO", "Grade (%)"]],
-        body: Object.entries(reportData.po_grades).map(([key, value]) => [
-          key,
-          `${value}%`,
-        ]),
+        body: Object.entries(reportData.grades.po_grades).map(([key, value]) => [key, `${value}%`]),
         theme: "grid",
         styles: { halign: "center" },
       });
@@ -562,41 +842,53 @@ function QuestionReport() {
       yPosition = doc.lastAutoTable.finalY + 10;
     }
 
-    // Cognitive Grades Table
-    if (
-      reportData.cognitive_grades &&
-      Object.keys(reportData.cognitive_grades).length > 0
-    ) {
+    // Cognitive Grades Table using the new grades field
+    if (reportData.grades?.cognitive_grades && Object.keys(reportData.grades.cognitive_grades).length > 0) {
       doc.setFontSize(12);
-      doc.text(
-        "Cognitive Grades",
-        doc.internal.pageSize.getWidth() / 2,
-        yPosition,
-        {
-          align: "center",
-        }
-      );
-
+      doc.text("Cognitive Grades", pageWidth / 2, yPosition, { align: "center" });
       yPosition += 5;
 
       autoTable(doc, {
         startY: yPosition + 5,
         head: [["Category", "Grade (%)"]],
-        body: Object.entries(reportData.cognitive_grades).map(
-          ([key, value]) => [key, `${value}%`]
-        ),
+        body: Object.entries(reportData.grades.cognitive_grades).map(([key, value]) => [key, `${value}%`]),
         theme: "grid",
         styles: { halign: "center" },
       });
+      yPosition = doc.lastAutoTable.finalY + 10;
     }
 
-    // Finally, save the PDF
+    // Add the chart images ensuring nothing is cropped:
+    try {
+      if (poChartRef.current) {
+        const poChartImage = poChartRef.current.toBase64Image();
+        if (yPosition + 80 > pageHeight) {
+          doc.addPage();
+          yPosition = margin;
+        }
+        doc.addImage(poChartImage, "PNG", margin, yPosition, pageWidth - 2 * margin, 80);
+        yPosition += 90;
+      }
+      if (cogChartRef.current) {
+        const cogChartImage = cogChartRef.current.toBase64Image();
+        if (yPosition + 80 > pageHeight) {
+          doc.addPage();
+          yPosition = margin;
+        }
+        doc.addImage(cogChartImage, "PNG", margin, yPosition, pageWidth - 2 * margin, 80);
+      }
+    } catch (err) {
+      console.error("Error adding chart images: ", err);
+    }
+
+    // Save the PDF
     if (studentReport) {
       doc.save(`Report_${student_id}.pdf`);
     } else if (averageReport) {
-      doc.save(`Average_Report.pdf`);
+      doc.save("Average_Report.pdf");
     }
   };
+
 
   // ------------------------------
   // RENDER
@@ -629,16 +921,12 @@ function QuestionReport() {
           >
             Get Average Report
           </button>
-
-          {/* 3) NEW: Overall Report Button */}
           <button
             onClick={fetchOverallReport}
             className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
           >
             Get Overall Report
           </button>
-
-          {/* Show Download button only if we have reportData */}
           {reportData && (
             <button
               onClick={downloadReport}
@@ -655,116 +943,134 @@ function QuestionReport() {
         {/* STUDENT / AVERAGE REPORTS */}
         {reportData && (studentReport || averageReport) && (
           <div className="mt-6 flex flex-col items-center w-full">
-            <div className="w-full max-w-2xl">
-              {studentReport && (
-                <h2 className="text-xl font-bold mb-2 text-center">
-                  {`Report of Student ID : ${student_id}`}
-                </h2>
-              )}
-              {averageReport && (
-                <h2 className="text-xl font-bold mb-2 text-center">
-                  Average Report
-                </h2>
-              )}
-
-              <h2 className="text-xl font-bold mb-2 text-center">PO Grades</h2>
-              <table className="table-fixed w-full border-collapse border border-gray-300 mb-4">
-                <thead>
-                  <tr>
-                    <th className="border border-gray-300 px-4 py-2 w-1/2 text-center">
-                      PO
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 w-1/2 text-center">
-                      Grade (%)
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(reportData.po_grades).map(([key, value]) => (
-                    <tr key={key}>
-                      <td className="border border-gray-300 px-4 py-2 text-center">
-                        {key}
-                      </td>
-                      <td className="border border-gray-300 px-4 py-2 text-center">
-                        {value}
-                      </td>
+            {/* Display Summary */}
+            {reportData.summary && (
+              <div className="mb-4">
+                <h2 className="text-xl font-bold text-center">Summary</h2>
+                <p className="text-center">{reportData.summary}</p>
+              </div>
+            )}
+            <div className="flex flex-row w-full justify-between">
+              <div className="w-1/2">
+                {studentReport && (
+                  <h2 className="text-xl font-bold mb-2 text-center">
+                    {`Report of Student ID : ${student_id}`}
+                  </h2>
+                )}
+                {averageReport && (
+                  <h2 className="text-xl font-bold mb-2 text-center">
+                    Average Report
+                  </h2>
+                )}
+                <h2 className="text-xl font-bold mb-2 text-center">PO Grades</h2>
+                <table className="table-fixed w-full border-collapse border border-gray-300 mb-4">
+                  <thead>
+                    <tr>
+                      <th className="border border-gray-300 px-4 py-2 w-1/2 text-center">
+                        PO
+                      </th>
+                      <th className="border border-gray-300 px-4 py-2 w-1/2 text-center">
+                        Grade (%)
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {Object.entries(reportData.grades.po_grades).map(
+                      ([key, value]) => (
+                        <tr key={key}>
+                          <td className="border border-gray-300 px-4 py-2 text-center">
+                            {key}
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2 text-center">
+                            {value}
+                          </td>
+                        </tr>
+                      )
+                    )}
+                  </tbody>
+                </table>
 
-            <div className="w-full max-w-2xl mt-4">
-              <h2 className="text-xl font-bold mb-2 text-center">
-                Cognitive Grades
-              </h2>
-              <table className="table-fixed w-full border-collapse border border-gray-300 mb-4">
-                <thead>
-                  <tr>
-                    <th className="border border-gray-300 px-4 py-2 w-1/2 text-center">
-                      Cognitive Domain
-                    </th>
-                    <th className="border border-gray-300 px-4 py-2 w-1/2 text-center">
-                      Grade (%)
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {Object.entries(reportData.cognitive_grades).map(
-                    ([key, value]) => (
-                      <tr key={key}>
-                        <td className="border border-gray-300 px-4 py-2 text-center">
-                          {key}
-                        </td>
-                        <td className="border border-gray-300 px-4 py-2 text-center">
-                          {value}
-                        </td>
-                      </tr>
-                    )
-                  )}
-                </tbody>
-              </table>
+                <h2 className="text-xl font-bold mb-2 text-center">
+                  Cognitive Grades
+                </h2>
+                <table className="table-fixed w-full border-collapse border border-gray-300 mb-4">
+                  <thead>
+                    <tr>
+                      <th className="border border-gray-300 px-4 py-2 w-1/2 text-center">
+                        Cognitive Domain
+                      </th>
+                      <th className="border border-gray-300 px-4 py-2 w-1/2 text-center">
+                        Grade (%)
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.entries(reportData.grades.cognitive_grades).map(
+                      ([key, value]) => (
+                        <tr key={key}>
+                          <td className="border border-gray-300 px-4 py-2 text-center">
+                            {key}
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2 text-center">
+                            {value}
+                          </td>
+                        </tr>
+                      )
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Bar charts on the right */}
+              <div className="w-1/2 flex flex-col gap-6">
+                <BarChart
+                  ref={poChartRef}
+                  title="PO Grades"
+                  labels={Object.keys(reportData.grades.po_grades)}
+                  data={reportData.grades.po_grades}
+                />
+                <BarChart
+                  ref={cogChartRef}
+                  title="Cognitive Grades"
+                  labels={Object.keys(reportData.grades.cognitive_grades)}
+                  data={reportData.grades.cognitive_grades}
+                />
+              </div>
             </div>
           </div>
         )}
 
+        {/* OVERALL REPORT */}
         {reportData && overallReport && reportData.length > 0 && (
           <div className="mt-6">
             <h2 className="text-xl font-bold mb-4 text-center">
               Overall Report
             </h2>
             <div className="overflow-x-auto">
-              {/* 1. Get the first student's structure to figure out the keys */}
               {(() => {
                 const firstItem = reportData[0];
                 const firstStudentId = Object.keys(firstItem)[0];
                 const { po_grades: firstPo, cognitive_grades: firstCog } =
                   firstItem[firstStudentId];
-                const poKeys = Object.keys(firstPo); // e.g. ["PO2", "PO8", "PO3", ...]
-                const cogKeys = Object.keys(firstCog); // e.g. ["Analyzing", "Evaluating", "Knowledge", ...]
+                const poKeys = Object.keys(firstPo);
+                const cogKeys = Object.keys(firstCog);
 
                 return (
                   <table className="table-auto w-full border-collapse border border-gray-300">
                     <thead className="bg-gray-300">
-                      {/* Top row of the header */}
                       <tr>
-                        {/* "Student ID" occupies 2 rows */}
                         <th
                           rowSpan={2}
                           className="border border-gray-300 px-4 py-2 text-center"
                         >
                           Student ID
                         </th>
-
-                        {/* "PO" spans however many PO keys exist */}
                         <th
                           colSpan={poKeys.length}
                           className="border border-gray-300 px-4 py-2 text-center"
                         >
                           PO%
                         </th>
-
-                        {/* "Cognitive Domain" spans however many Cognitive keys exist */}
                         <th
                           colSpan={cogKeys.length}
                           className="border border-gray-300 px-4 py-2 text-center"
@@ -772,8 +1078,6 @@ function QuestionReport() {
                           Cognitive Domain%
                         </th>
                       </tr>
-
-                      {/* Second row of the header: each PO key, then each cognitive key */}
                       <tr>
                         {poKeys.map((poKey) => (
                           <th
@@ -793,7 +1097,6 @@ function QuestionReport() {
                         ))}
                       </tr>
                     </thead>
-
                     <tbody>
                       {reportData.map((item) => {
                         const studentId = Object.keys(item)[0];
@@ -801,12 +1104,9 @@ function QuestionReport() {
 
                         return (
                           <tr key={studentId}>
-                            {/* Student ID */}
                             <td className="border border-gray-300 px-4 py-2 text-center">
                               {studentId}
                             </td>
-
-                            {/* PO columns */}
                             {poKeys.map((poKey) => (
                               <td
                                 key={poKey}
@@ -815,8 +1115,6 @@ function QuestionReport() {
                                 {po_grades[poKey]}
                               </td>
                             ))}
-
-                            {/* Cognitive columns */}
                             {cogKeys.map((cogKey) => (
                               <td
                                 key={cogKey}

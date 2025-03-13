@@ -5,6 +5,9 @@ import axios from "axios";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 
+axios.defaults.withCredentials = true; // Enables sending cookies with every request
+
+
 function QuestionResult() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -468,7 +471,7 @@ function QuestionResult() {
     try {
       setIsLoading(true);
       const response = await axios.put(
-        `http://127.0.0.1:8000/question/current-record`,
+        `http://localhost:8000/question/current-record`,
         requestBody,
         {
           headers: {
@@ -517,7 +520,7 @@ function QuestionResult() {
     setIsLoading(true)
     try {
       const response = await axios.put(
-        `http://127.0.0.1:8000/report/publish`,
+        `http://localhost:8000/report/publish`,
         {
           question_id,
           current_record: obtained_marks_mapping,

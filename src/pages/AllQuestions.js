@@ -5,6 +5,9 @@ import { jsPDF } from "jspdf";
 import Navbar from "../components/Navbar";
 import { motion, AnimatePresence } from "framer-motion";
 
+axios.defaults.withCredentials = true; // Enables sending cookies with every request
+
+
 function AllQuestions() {
   const [questions, setQuestions] = useState([]);
   const [error, setError] = useState("");
@@ -40,7 +43,7 @@ function AllQuestions() {
         }
 
         const response = await axios.get(
-          `http://127.0.0.1:8000/classroom/questions/${classroom_id}`,
+          `http://localhost:8000/classroom/questions/${classroom_id}`,
           {
             headers: {
               accessToken: token,
@@ -75,7 +78,7 @@ function AllQuestions() {
         return;
       }
       const response = await axios.get(
-        `http://127.0.0.1:8000/question/template`,
+        `http://localhost:8000/question/template`,
         {
           params: { file_type: fileType },
           responseType: "blob",
@@ -145,7 +148,7 @@ function AllQuestions() {
       formData.append("file", file);
 
       const response = await axios.post(
-        "http://127.0.0.1:8000/question/co-po-mapping",
+        "http://localhost:8000/question/co-po-mapping",
         formData,
         {
           headers: {

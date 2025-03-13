@@ -5,6 +5,9 @@ import Navbar from "../components/Navbar";
 import { FiCopy } from "react-icons/fi";
 import { motion, AnimatePresence } from "framer-motion";
 
+axios.defaults.withCredentials = true; // Enables sending cookies with every request
+
+
 function Classroom() {
   const [classroomDetails, setClassroomDetails] = useState(null);
   const [error, setError] = useState("");
@@ -70,7 +73,7 @@ function Classroom() {
         return;
       }
       const response = await axios.get(
-        `http://127.0.0.1:8000/classroom/${id}`,
+        `http://localhost:8000/classroom/${id}`,
         {
           headers: {
             accessToken: token,
@@ -100,7 +103,7 @@ function Classroom() {
         return;
       }
       const response = await axios.post(
-        "http://127.0.0.1:8000/classroom/co-po-mapping",
+        "http://localhost:8000/classroom/co-po-mapping",
         { classroom_id, syllabus: syllabusText },
         {
           headers: {
@@ -261,7 +264,7 @@ function Classroom() {
         return;
       }
       const response = await axios.put(
-        "http://127.0.0.1:8000/classroom/co-po-mapping",
+        "http://localhost:8000/classroom/co-po-mapping",
         {
           classroom_id,
           co_po_table: finalTable,

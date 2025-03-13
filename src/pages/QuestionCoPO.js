@@ -3,6 +3,9 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import Navbar from '../components/Navbar';
 
+axios.defaults.withCredentials = true; // Enables sending cookies with every request
+
+
 function QuestionCoPo() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -307,7 +310,7 @@ function QuestionCoPo() {
     try {
       setIsLoading(true);
       // Make your POST request (update the URL as per your backend)
-      const response = await axios.post(`http://127.0.0.1:8000/question`, payload, {
+      const response = await axios.post(`http://localhost:8000/question`, payload, {
         headers: {
           accessToken: token,
         },

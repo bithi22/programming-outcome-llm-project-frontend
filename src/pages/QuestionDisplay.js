@@ -4,6 +4,9 @@ import axios from "axios";
 import Navbar from "../components/Navbar";
 import { motion, AnimatePresence } from "framer-motion";
 
+axios.defaults.withCredentials = true; // Enables sending cookies with every request
+
+
 function QuestionDisplay() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -52,7 +55,7 @@ function QuestionDisplay() {
         }
 
         const response = await axios.get(
-          `http://127.0.0.1:8000/question/${question_id}`,
+          `http://localhost:8000/question/${question_id}`,
           {
             headers: {
               accessToken: token,
@@ -362,7 +365,7 @@ function QuestionDisplay() {
         question_id: question_id,
       };
       const response = await axios.put(
-        "http://127.0.0.1:8000/question/update-co-po-mapping",
+        "http://localhost:8000/question/update-co-po-mapping",
         payload,
         {
           headers: { accessToken: token },

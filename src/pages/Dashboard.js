@@ -6,6 +6,9 @@ import ClassCard from '../components/ClassCard';
 
 import { motion, AnimatePresence } from 'framer-motion';
 
+axios.defaults.withCredentials = true; // Enables sending cookies with every request
+
+
 function Dashboard() {
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false); // State for join modal
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); // State for create modal
@@ -45,7 +48,7 @@ function Dashboard() {
         setLoadingClasses(false);
         return;
       }
-      const response = await axios.get('http://127.0.0.1:8000/user/classrooms', {
+      const response = await axios.get('http://localhost:8000/user/classrooms', {
         headers: { accessToken: token },
       });
       setClasses(response.data.data || []);
@@ -71,7 +74,7 @@ function Dashboard() {
         setLoadingJoin(false);
         return;
       }
-      const response = await axios.post('http://127.0.0.1:8000/classroom/join', { code: joinCode }, { headers: { accessToken: token } });
+      const response = await axios.post('http://localhost:8000/classroom/join', { code: joinCode }, { headers: { accessToken: token } });
       if (response.status === 200) {
         setTimeout(()=>{
           setError('');
@@ -117,7 +120,7 @@ function Dashboard() {
         setLoadingCreate(false);
         return;
       }
-      const response = await axios.post('http://127.0.0.1:8000/classroom', { name, course, course_code, start_date, end_date }, { headers: { accessToken: token } });
+      const response = await axios.post('http://localhost:8000/classroom', { name, course, course_code, start_date, end_date }, { headers: { accessToken: token } });
       if (response.status === 201) {
         setTimeout(()=>{
           setError('');

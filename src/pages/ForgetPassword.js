@@ -4,6 +4,9 @@ import Navbar from "../components/Navbar";
 import axios from "axios";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
+axios.defaults.withCredentials = true; // Enables sending cookies with every request
+
+
 function ForgetPassword() {
   // State for input fields and error messages
   const [email, setEmail] = useState("");
@@ -47,7 +50,7 @@ function ForgetPassword() {
     try {
       // Call your API to get the verification token
       const response = await axios.post(
-        "http://127.0.0.1:8000/auth/forget_password/initiate",
+        "http://localhost:8000/auth/forget_password/initiate",
         { email }
       );
       if (response.status === 200) {
@@ -103,7 +106,7 @@ function ForgetPassword() {
     try {
       // Call your API to set the new password
       const response = await axios.put(
-        "http://127.0.0.1:8000/auth/forget_password/confirm",
+        "http://localhost:8000/auth/forget_password/confirm",
         { email, password : newPassword, token }
       );
       if (response.status === 200) {

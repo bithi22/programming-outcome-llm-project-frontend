@@ -3,6 +3,9 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import axios from "axios";
 
+axios.defaults.withCredentials = true; // Enables sending cookies with every request
+
+
 function EmailVerification() {
   const [searchParams] = useSearchParams();
   const email = searchParams.get("email");
@@ -35,7 +38,7 @@ function EmailVerification() {
     setLoading(true);
     try {
       const response = await axios.post(
-        "http://127.0.0.1:8000/auth/verifyEmail",
+        "http://localhost:8000/auth/verifyEmail",
         { email, token }
       );
 

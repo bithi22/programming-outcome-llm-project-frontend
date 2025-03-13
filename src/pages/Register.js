@@ -5,6 +5,9 @@ import Navbar from "../components/Navbar";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import GoogleAuth from "../components/GoogleAuth";
 
+axios.defaults.withCredentials = true; // Enables sending cookies with every request
+
+
 function Register() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -89,7 +92,7 @@ function Register() {
     try {
       const requestBody = { email, password };
       const response = await axios.post(
-        "http://127.0.0.1:8000/auth/register",
+        "http://localhost:8000/auth/register",
         requestBody
       );
 

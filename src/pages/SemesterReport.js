@@ -5,6 +5,9 @@ import autoTable from "jspdf-autotable";
 import Navbar from "../components/Navbar";
 import BarChart from "../components/BarChart";
 
+axios.defaults.withCredentials = true; // Enables sending cookies with every request
+
+
 function SemesterReport() {
   const [student_id, setstudent_id] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -50,7 +53,7 @@ function SemesterReport() {
 
     try {
       const response = await axios.post(
-        `http://127.0.0.1:8000/report/overall/${student_id}`,
+        `http://localhost:8000/report/overall/${student_id}`,
         {
           start_date: startDate, // format: YYYY-MM-DD
           end_date: endDate,     // format: YYYY-MM-DD

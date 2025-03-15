@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from "framer-motion";
 
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
 
-
 function AllQuestions() {
   const [questions, setQuestions] = useState([]);
   const [error, setError] = useState("");
@@ -106,12 +105,12 @@ function AllQuestions() {
   };
 
   const handleCancelNewQuestion = () => {
-    setQuestionName("")
-    setWeight("")
-    setFile(null)
-    setShowModal(false)
-    setMappingError("")
-    setMappingLoading(false)
+    setQuestionName("");
+    setWeight("");
+    setFile(null);
+    setShowModal(false);
+    setMappingError("");
+    setMappingLoading(false);
   };
 
   const handleFileChange = (event) => {
@@ -129,9 +128,9 @@ function AllQuestions() {
   };
 
   const handleGetCoPoMapping = async () => {
-    if(!questionName || !weight || !file){
-      setMappingError("Please fill in all the fields.")
-      return
+    if (!questionName || !weight || !file) {
+      setMappingError("Please fill in all the fields.");
+      return;
     }
 
     try {
@@ -173,21 +172,16 @@ function AllQuestions() {
         }, 1500);
       }
     } catch (error) {
-      setTimeout(()=>{
+      setTimeout(() => {
         setMappingError(error.response?.data?.message);
         setMappingLoading(false);
-      },1500)
-      
+      }, 1500);
     }
   };
 
   return (
     <div>
-      <Navbar
-        navItems={navItems}
-        actionButton={actionButton}
-        buttonStyle="border border-red-500 text-red-500 py-2 px-4 rounded-md hover:bg-red-500 hover:text-white"
-      />
+      <Navbar navItems={navItems} logout={true} />
 
       <div className="container mx-auto px-6 mt-24">
         <div className="flex items-center justify-between mb-6">
@@ -367,8 +361,12 @@ function AllQuestions() {
                 className="border p-2 w-full rounded mb-4"
                 onChange={handleFileChange}
               />
-              {mappingError && <p className="text-red-500 text-sm mb-4 text-center font-bold">{mappingError}</p>}
-              
+              {mappingError && (
+                <p className="text-red-500 text-sm mb-4 text-center font-bold">
+                  {mappingError}
+                </p>
+              )}
+
               {/* Loader Spinner */}
               {mappingLoading && (
                 <div className="flex justify-center mb-4">

@@ -1,38 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import ClassCard from '../components/ClassCard';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import ClassCard from "../components/ClassCard";
 
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from "framer-motion";
 
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
-
 
 function Dashboard() {
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false); // State for join modal
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); // State for create modal
-  const [joinCode, setJoinCode] = useState('');
+  const [joinCode, setJoinCode] = useState("");
   // Use an object to store newClass data
   const [newClass, setNewClass] = useState({
-    name: '',
-    course: '',
-    course_code: '',
-    start_date: '',
-    end_date: ''
+    name: "",
+    course: "",
+    course_code: "",
+    start_date: "",
+    end_date: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [classes, setClasses] = useState([]); // Registered classes
   const [loadingClasses, setLoadingClasses] = useState(true);
   const [loadingJoin, setLoadingJoin] = useState(false);
   const [loadingCreate, setLoadingCreate] = useState(false);
   const navigate = useNavigate();
 
-  const navItems = [
-    { label: 'Semester Report', path: '/report' },
-  ];
+  const navItems = [{ label: "Semester Report", path: "/report" }];
 
-  const actionButton = { label: 'Logout', path: '/logout' };
+  const actionButton = { label: "Logout", path: "/logout" };
 
   // Fetch registered classes on component mount
   useEffect(() => {
@@ -42,18 +39,21 @@ function Dashboard() {
   const fetchRegisteredClasses = async () => {
     setLoadingClasses(true);
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem("accessToken");
       if (!token) {
-        setError('You are not logged in. Please log in first.');
+        setError("You are not logged in. Please log in first.");
         setLoadingClasses(false);
         return;
       }
-      const response = await axios.get('http://localhost:8000/user/classrooms', {
-        headers: { accessToken: token },
-      });
+      const response = await axios.get(
+        "http://localhost:8000/user/classrooms",
+        {
+          headers: { accessToken: token },
+        }
+      );
       setClasses(response.data.data || []);
     } catch (error) {
-      setError('Failed to fetch classes. Please try again.');
+      setError("Failed to fetch classes. Please try again.");
     } finally {
       setLoadingClasses(false);
     }
@@ -61,36 +61,43 @@ function Dashboard() {
 
   const handleJoinClass = async () => {
     setLoadingJoin(true);
-    setError('');
+    setError("");
     if (!joinCode) {
-      setError('Please enter the classroom code.');
+      setError("Please enter the classroom code.");
       setLoadingJoin(false);
       return;
     }
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem("accessToken");
       if (!token) {
-        setError('You are not logged in. Please log in first.');
+        setError("You are not logged in. Please log in first.");
         setLoadingJoin(false);
         return;
       }
-      const response = await axios.post('http://localhost:8000/classroom/join', { code: joinCode }, { headers: { accessToken: token } });
+      const response = await axios.post(
+        "http://localhost:8000/classroom/join",
+        { code: joinCode },
+        { headers: { accessToken: token } }
+      );
       if (response.status === 200) {
-        setTimeout(()=>{
-          setError('');
+        setTimeout(() => {
+          setError("");
           // Reset join code after success
-          setJoinCode('');
+          setJoinCode("");
           setIsJoinModalOpen(false);
           fetchRegisteredClasses();
-          setLoadingJoin(false)
-        },1500)
+          setLoadingJoin(false);
+        }, 1500);
       }
     } catch (error) {
-      setTimeout(()=>{
-        setError(error.response?.data?.message || 'Failed to join classroom. Please try again.');
-        setLoadingJoin(false)
-      },1500)
-    } 
+      setTimeout(() => {
+        setError(
+          error.response?.data?.message ||
+            "Failed to join classroom. Please try again."
+        );
+        setLoadingJoin(false);
+      }, 1500);
+    }
   };
 
   function isStartDateEarlier(start_date, end_date) {
@@ -99,76 +106,85 @@ function Dashboard() {
 
   const handleCreateClass = async () => {
     setLoadingCreate(true);
-    setError('');
+    setError("");
     const { name, course, course_code, start_date, end_date } = newClass;
     if (!name || !course || !course_code || !start_date || !end_date) {
-      setError('Please fill in all fields.');
+      setError("Please fill in all fields.");
       setLoadingCreate(false);
       return;
     }
 
-    if(!isStartDateEarlier(start_date,end_date)){
-      setError('Semester start date must be earlier than semester end date.')
-      setLoadingCreate(false)
-      return
+    if (!isStartDateEarlier(start_date, end_date)) {
+      setError("Semester start date must be earlier than semester end date.");
+      setLoadingCreate(false);
+      return;
     }
 
     try {
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem("accessToken");
       if (!token) {
-        setError('You are not logged in. Please log in first.');
+        setError("You are not logged in. Please log in first.");
         setLoadingCreate(false);
         return;
       }
-      const response = await axios.post('http://localhost:8000/classroom', { name, course, course_code, start_date, end_date }, { headers: { accessToken: token } });
+      const response = await axios.post(
+        "http://localhost:8000/classroom",
+        { name, course, course_code, start_date, end_date },
+        { headers: { accessToken: token } }
+      );
       if (response.status === 201) {
-        setTimeout(()=>{
-          setError('');
+        setTimeout(() => {
+          setError("");
           // Reset newClass fields after success
-          setNewClass({ name: '', course: '', course_code: '', start_date: '', end_date: '' });
+          setNewClass({
+            name: "",
+            course: "",
+            course_code: "",
+            start_date: "",
+            end_date: "",
+          });
           setIsCreateModalOpen(false);
-          setLoadingCreate(false)
+          setLoadingCreate(false);
           fetchRegisteredClasses();
-        },1500)
-        
+        }, 1500);
       }
     } catch (error) {
-      setTimeout(()=>{
-        setError(error.response?.data?.message || 'Failed to create classroom. Please try again.');
-        setLoadingCreate(false)
-      },1500)
-    } 
+      setTimeout(() => {
+        setError(
+          error.response?.data?.message ||
+            "Failed to create classroom. Please try again."
+        );
+        setLoadingCreate(false);
+      }, 1500);
+    }
   };
 
   const handleViewClass = (classId) => {
-    navigate('/classroom', { state: { classroom_id: classId } });
+    navigate("/classroom", { state: { classroom_id: classId } });
   };
 
-  const handleCancelJoin = ()=>{
-    setIsJoinModalOpen(false)
-    setError('')
-    setJoinCode('')
-  }
+  const handleCancelJoin = () => {
+    setIsJoinModalOpen(false);
+    setError("");
+    setJoinCode("");
+  };
 
-  const handleCancelCreate = ()=>{
-    setIsCreateModalOpen(false)
-    setError('')
+  const handleCancelCreate = () => {
+    setIsCreateModalOpen(false);
+    setError("");
     setNewClass({
-      name: '',
-      course: '',
-      course_code: '',
-      start_date: '',
-      end_date: ''
-    })
-  }
+      name: "",
+      course: "",
+      course_code: "",
+      start_date: "",
+      end_date: "",
+    });
+  };
 
   return (
     <div>
       {/* Navbar */}
-      <Navbar
-        navItems={navItems} 
-        logout={true}
-        />
+      <Navbar navItems={navItems} logout={true} />
 
       {/* Page Content */}
       <div className="px-20 mt-24 mb-6 mr-6">
@@ -183,7 +199,7 @@ function Dashboard() {
             </button>
             <button
               onClick={() => setIsJoinModalOpen(true)}
-              className= "bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC]"
+              className="bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC]"
             >
               Join Class
             </button>
@@ -203,7 +219,10 @@ function Dashboard() {
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
             >
               {[...Array(3)].map((_, idx) => (
-                <div key={idx} className="bg-gray-200 animate-pulse h-32 w-full rounded-md" />
+                <div
+                  key={idx}
+                  className="bg-gray-200 animate-pulse h-32 w-full rounded-md"
+                />
               ))}
             </motion.div>
           ) : (
@@ -222,7 +241,7 @@ function Dashboard() {
                   title={classItem.name}
                   year={classItem.course}
                   semester={classItem.course_code}
-                  image={process.env.PUBLIC_URL + '/assets/classImage.png'}
+                  image={process.env.PUBLIC_URL + "/assets/classImage.png"}
                   onClick={() => handleViewClass(classItem._id)}
                 />
               ))}
@@ -237,24 +256,30 @@ function Dashboard() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3, ease: 'easeInOut' }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
         >
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-lg w-[400px] p-6">
-              <h2 className="text-xl font-semibold mb-2 text-left">Join a Classroom</h2>
+              <h2 className="text-xl font-semibold mb-2 text-left">
+                Join a Classroom
+              </h2>
               <p className="text-gray-600 text-left mb-6">
                 Enter the classroom code you want to join.
               </p>
               <input
                 type="text"
-                spellCheck = {false}
+                spellCheck={false}
                 value={joinCode}
                 onChange={(e) => setJoinCode(e.target.value)}
                 className="w-full px-4 py-2 mb-2 border border-black rounded-md focus:outline-none"
                 placeholder="Enter classroom code"
               />
-              {error && <p className="text-red-500 text-sm mb-4 text-center font-bold">{error}</p>}
+              {error && (
+                <p className="text-red-500 text-sm mb-4 text-center font-bold">
+                  {error}
+                </p>
+              )}
               {/* Loader Spinner */}
               {loadingJoin && (
                 <div className="flex justify-center mt-2 mb-4">
@@ -292,7 +317,7 @@ function Dashboard() {
                 </button>
                 <button
                   onClick={handleJoinClass}
-                  disabled = {loadingJoin}
+                  disabled={loadingJoin}
                   className={`bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] ${
                     loadingJoin ? "opacity-50 cursor-not-allowed" : ""
                   }`}
@@ -311,44 +336,50 @@ function Dashboard() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.3, ease: 'easeInOut' }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
         >
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg shadow-lg w-[400px] p-6">
-              <h2 className="text-xl font-semibold mb-4 text-left">Create a Classroom</h2>
+              <h2 className="text-xl font-semibold mb-4 text-left">
+                Create a Classroom
+              </h2>
               <label
-                  htmlFor="classroom_name"
-                  className="block font-bold text-left mb-1 text-black"
-                >
-                  Classroom Name
-                </label>
+                htmlFor="classroom_name"
+                className="block font-bold text-left mb-1 text-black"
+              >
+                Classroom Name
+              </label>
               <input
                 type="text"
                 value={newClass.name}
-                onChange={(e) => setNewClass({ ...newClass, name: e.target.value })}
+                onChange={(e) =>
+                  setNewClass({ ...newClass, name: e.target.value })
+                }
                 className="w-full px-4 py-2 border border-black rounded-md mb-4 focus:outline-none"
                 placeholder="Enter classroom name"
               />
               <label
-                  htmlFor="course"
-                  className="block font-bold text-left mb-1 text-black"
-                >
-                  Course
-                </label>
+                htmlFor="course"
+                className="block font-bold text-left mb-1 text-black"
+              >
+                Course
+              </label>
               <input
                 type="text"
                 value={newClass.course}
-                onChange={(e) => setNewClass({ ...newClass, course: e.target.value })}
+                onChange={(e) =>
+                  setNewClass({ ...newClass, course: e.target.value })
+                }
                 className="w-full px-4 py-2 border border-black rounded-md mb-4 focus:outline-none"
                 placeholder="Enter course name"
               />
               <label
-                  htmlFor="course_code"
-                  className="block font-bold text-left mb-1 text-black"
-                >
-                  Course Code
-                </label>
+                htmlFor="course_code"
+                className="block font-bold text-left mb-1 text-black"
+              >
+                Course Code
+              </label>
               <input
                 type="text"
                 value={newClass.course_code}
@@ -359,32 +390,40 @@ function Dashboard() {
                 placeholder="Enter course code"
               />
               <label
-                  htmlFor="start_Date"
-                  className="block font-bold text-left mb-1 text-black"
-                >
-                  Semester Start Date
-                </label>
+                htmlFor="start_Date"
+                className="block font-bold text-left mb-1 text-black"
+              >
+                Semester Start Date
+              </label>
               <input
                 type="date"
                 value={newClass.start_date}
-                onChange={(e) => setNewClass({ ...newClass, start_date: e.target.value })}
+                onChange={(e) =>
+                  setNewClass({ ...newClass, start_date: e.target.value })
+                }
                 className="w-full px-4 py-2 border border-black rounded-md mb-4 focus:outline-none"
                 placeholder="Select start date"
               />
               <label
-                  htmlFor="end_date"
-                  className="block font-bold text-left mb-1 text-black"
-                >
-                  Semester End Date
-                </label>
+                htmlFor="end_date"
+                className="block font-bold text-left mb-1 text-black"
+              >
+                Semester End Date
+              </label>
               <input
                 type="date"
                 value={newClass.end_date}
-                onChange={(e) => setNewClass({ ...newClass, end_date: e.target.value })}
+                onChange={(e) =>
+                  setNewClass({ ...newClass, end_date: e.target.value })
+                }
                 className="w-full px-4 py-2 border border-black rounded-md mb-4 focus:outline-none"
                 placeholder="Select end date"
               />
-              {error && <p className="text-red-500 text-center text-sm mb-4 font-bold">{error}</p>}
+              {error && (
+                <p className="text-red-500 text-center text-sm mb-4 font-bold">
+                  {error}
+                </p>
+              )}
               {/* Loader Spinner */}
               {loadingCreate && (
                 <div className="flex justify-center mb-4">
@@ -422,7 +461,7 @@ function Dashboard() {
                 </button>
                 <button
                   onClick={handleCreateClass}
-                  disabled = {loadingCreate}
+                  disabled={loadingCreate}
                   className={`bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] ${
                     loadingCreate ? "opacity-50 cursor-not-allowed" : ""
                   }`}

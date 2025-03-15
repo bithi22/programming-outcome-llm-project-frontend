@@ -401,10 +401,9 @@ function QuestionDisplay() {
   return (
     <div>
       <Navbar
-        navItems={navItems}
-        actionButton={actionButton}
-        buttonStyle="border border-red-500 text-red-500 py-2 px-4 rounded-md hover:bg-red-500 hover:text-white"
-      />
+        navItems={navItems} 
+        logout={true}
+        />
 
       <AnimatePresence mode="wait">
         {isLoading ? (

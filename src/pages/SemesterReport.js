@@ -435,6 +435,9 @@ function SemesterReport() {
   // Fetching function
   // ------------------------------
   const handleGenerateReport = async () => {
+    setReportData(null);
+    setError(null);
+    setLoading(true);
     // Validate fields
     if (!studentId || !startDate || !endDate) {
       setError(
@@ -447,8 +450,6 @@ function SemesterReport() {
       return;
     }
 
-    setLoading(true);
-    setError(null);
 
     const token = localStorage.getItem("accessToken");
     if (!token) {
@@ -471,16 +472,23 @@ function SemesterReport() {
       );
 
       if (response.data.success) {
-        setReportData(response.data.data);
+        setTimeout(()=>{
+          setReportData(response.data.data);
+          setLoading(false)
+        },1500)
       } else {
-        setError(response.data.message);
-        setReportData(null);
+        setTimeout(()=>{
+          setError(response.data.message);
+          setLoading(false)
+        },1500)
+        
       }
     } catch (error) {
-      setError(error.response?.data?.message);
-      setReportData(null);
-    } finally {
-      setLoading(false);
+      setTimeout(()=>{
+        setError(error.response?.data?.message);
+        setLoading(false)
+      },1500)
+      
     }
   };
 
@@ -602,10 +610,9 @@ function SemesterReport() {
     <div className="min-h-screen bg-white flex flex-col">
       {/* Navbar */}
       <Navbar
-        navItems={navItems}
-        actionButton={actionButton}
-        buttonStyle="border border-red-500 text-red-500 py-2 px-4 rounded-md hover:bg-red-500 hover:text-white"
-      />
+        navItems={navItems} 
+        logout={true}
+        />
       <div className="h-16"></div>
 
       {/* Form Card */}
@@ -723,14 +730,6 @@ function SemesterReport() {
               Download Report
             </button>
           </div>
-          <div className="mb-4">
-            <p className="font-inter text-[16px]">
-              <strong>Student ID:</strong> {studentId}
-            </p>
-            <p className="font-inter text-[16px]">
-              <strong>Semester:</strong> {startDate} to {endDate}
-            </p>
-          </div>
           {/* Summary */}
           {reportData.summary && (
             <div className="mb-8">
@@ -745,7 +744,7 @@ function SemesterReport() {
             <div className="w-1/2 flex flex-col px-4">
               <h3 className="text-lg font-bold text-center mb-2">PO Grades</h3>
               <div className="h-full flex-grow">
-                <table className="w-full border border-gray-200">
+                <table className="w-full border border-gray-200 h-full">
                   <thead className="bg-black text-white">
                     <tr>
                       <th className="px-4 py-2 border border-gray-200 text-center">PO</th>
@@ -766,7 +765,7 @@ function SemesterReport() {
             <div className="w-1/2 flex flex-col px-4">
               <h3 className="text-lg font-bold text-center mb-2">Cognitive Grades</h3>
               <div className="h-full flex-grow">
-                <table className="w-full border border-gray-200">
+                <table className="w-full border border-gray-200 h-full">
                   <thead className="bg-black text-white">
                     <tr>
                       <th className="px-4 py-2 border border-gray-200 text-center">Category</th>

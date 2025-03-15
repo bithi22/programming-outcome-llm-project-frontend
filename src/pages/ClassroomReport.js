@@ -421,11 +421,7 @@ function ClassroomReport() {
   return (
     <div className="min-h-screen bg-white flex flex-col">
       {/* Navbar */}
-      <Navbar
-        navItems={navItems}
-        actionButton={actionButton}
-        buttonStyle="border border-red-500 text-red-500 py-2 px-4 rounded-md hover:bg-red-500 hover:text-white"
-      />
+      <Navbar navItems={navItems} logout={true} />
       <div className="h-16"></div>
 
       <AnimatePresence mode="wait">

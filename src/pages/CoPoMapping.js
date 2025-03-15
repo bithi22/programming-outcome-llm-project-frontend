@@ -5,7 +5,6 @@ import Navbar from "../components/Navbar";
 
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
 
-
 function CoPoMapping() {
   const location = useLocation();
   const classroom_id = location.state?.classroom_id || "";
@@ -140,10 +139,10 @@ function CoPoMapping() {
       );
 
       if (response.data.success) {
-        setTimeout(()=>{
+        setTimeout(() => {
           setPopupVisible(true);
           setIsLoading(false);
-        },1500)
+        }, 1500);
         // Show success popup for 3 seconds, then navigate
         setTimeout(() => {
           navigate("/classroom", {
@@ -153,34 +152,27 @@ function CoPoMapping() {
           });
         }, 3000);
       } else {
-        setTimeout(()=>{
+        setTimeout(() => {
           setError(response.data.message);
           setIsLoading(false);
-        },1500)
+        }, 1500);
       }
     } catch (error) {
-      setTimeout(()=>{
+      setTimeout(() => {
         setError(error.response?.data?.message);
         setIsLoading(false);
-      },1500)
+      }, 1500);
     }
   };
 
   return (
     <div>
-      <Navbar
-        navItems={navItems}
-        actionButton={actionButton}
-        buttonStyle="border border-red-500 text-red-500 py-2 px-4 rounded-md hover:bg-red-500 hover:text-white"
-      />
-
+      <Navbar navItems={navItems} logout={true} />
       {/* Loading Overlay */}
       {isLoading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-500 bg-opacity-50">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#2C36CC]"></div>
-          <span className="ml-2 text-black">
-            Please wait...
-          </span>
+          <span className="ml-2 text-black">Please wait...</span>
         </div>
       )}
 

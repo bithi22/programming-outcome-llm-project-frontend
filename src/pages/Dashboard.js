@@ -166,10 +166,9 @@ function Dashboard() {
     <div>
       {/* Navbar */}
       <Navbar
-        navItems={navItems}
-        actionButton={actionButton}
-        buttonStyle="border-2 border-red-500 text-red-500 py-2 px-4 rounded-md hover:bg-red-500 hover:text-white"
-      />
+        navItems={navItems} 
+        logout={true}
+        />
 
       {/* Page Content */}
       <div className="px-20 mt-24 mb-6 mr-6">

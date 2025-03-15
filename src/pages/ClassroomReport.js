@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -7,11 +7,14 @@ import { useLocation } from "react-router-dom";
 import * as XLSX from "xlsx";
 import BarChart from "../components/BarChart";
 
+import { motion, AnimatePresence } from "framer-motion";
+
 axios.defaults.withCredentials = true;
 
 function ClassroomReport() {
   const location = useLocation();
-  const { classroom_id, teacher_access, committee_access, classroom_name } = location.state;
+  const { classroom_id, teacher_access, committee_access, classroom_name } =
+    location.state;
 
   // State variables
   const [studentId, setStudentId] = useState("");
@@ -19,7 +22,14 @@ function ClassroomReport() {
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [viewReportType,setViewReportType] = useState('')
+  const [viewReportType, setViewReportType] = useState("");
+
+  const [studentsLoading, setStudentsLoading] = useState(false);
+  const [studentsError, setStudentsError] = useState("");
+
+  // New state for student IDs based on role
+  const [teacherStudents, setTeacherStudents] = useState([]);
+  const [committeeStudents, setCommitteeStudents] = useState([]);
 
   // Determine initial role
   const initialRole =
@@ -39,15 +49,67 @@ function ClassroomReport() {
   const actionButton = { label: "Logout", path: "/logout" };
 
   // ------------------------------
-  // Fetching functions
+  // Fetch student IDs on mount (or when classroom_id changes)
+  // ------------------------------
+  useEffect(() => {
+    const fetchStudents = async () => {
+      setStudentsLoading(true);
+      setStudentsError(null);
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        setError("Access token not found.");
+        return;
+      }
+      try {
+        const response = await axios.get(
+          `http://localhost:8000/classroom/students/${classroom_id}`,
+          { headers: { accessToken: token } }
+        );
+        if (response.data.success) {
+          const { teacher_students, committee_students } = response.data.data;
+          setTeacherStudents(teacher_students.sort());
+          setCommitteeStudents(committee_students.sort());
+        } else {
+          setStudentsError(response.data.message);
+        }
+      } catch (error) {
+        setStudentsError(
+          error.response?.data?.message || "Error fetching student IDs."
+        );
+      } finally {
+        setTimeout(() => {
+          setStudentsLoading(false);
+        }, 1500);
+      }
+    };
+
+    fetchStudents();
+  }, [classroom_id]);
+
+  // ------------------------------
+  // Update studentId when role or student arrays change
+  // ------------------------------
+  useEffect(() => {
+    const selectedStudents =
+      role === "teacher" ? teacherStudents : committeeStudents;
+    if (selectedStudents.length > 0) {
+      setStudentId(selectedStudents[0]);
+    } else {
+      setStudentId("");
+    }
+  }, [role, teacherStudents, committeeStudents]);
+
+  // ------------------------------
+  // Fetching functions (unchanged)
   // ------------------------------
   const fetchStudentReport = async () => {
+    setReportData(null);
+    setError(null);
     if (!studentId) {
-      setError("Please enter a valid Student ID.");
+      setError("Please select a valid Student ID.");
       return;
     }
     setLoading(true);
-    setError(null);
     const token = localStorage.getItem("accessToken");
     if (!token) {
       setError("Access token not found.");
@@ -60,23 +122,31 @@ function ClassroomReport() {
         { headers: { accessToken: token } }
       );
       if (response.data.success) {
-        setReportData(response.data.data);
-        setViewReportType('student')
+        setTimeout(() => {
+          setReportData(response.data.data);
+          setViewReportType("student");
+          setLoading(false);
+        }, 1500);
       } else {
-        setError("Failed to fetch report.");
-        setReportData(null);
+        setTimeout(() => {
+          setError(response.data.message);
+          setReportData(null);
+          setLoading(false);
+        }, 1500);
       }
-    } catch (err) {
-      setError("Error while fetching report.");
-      setReportData(null);
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      setTimeout(() => {
+        setError(error.response?.data?.message);
+        setReportData(null);
+        setLoading(false);
+      }, 1500);
     }
   };
 
   const fetchAverageReport = async () => {
-    setLoading(true);
+    setReportData(null);
     setError(null);
+    setLoading(true);
     const token = localStorage.getItem("accessToken");
     if (!token) {
       setError("Access token not found.");
@@ -89,23 +159,31 @@ function ClassroomReport() {
         { headers: { accessToken: token } }
       );
       if (response.data.success) {
-        setReportData(response.data.data);
-        setViewReportType('average')
+        setTimeout(() => {
+          setReportData(response.data.data);
+          setViewReportType("average");
+          setLoading(false);
+        }, 1500);
       } else {
-        setError("Failed to fetch report.");
-        setReportData(null);
+        setTimeout(() => {
+          setError(response.data.message);
+          setReportData(null);
+          setLoading(false);
+        }, 1500);
       }
-    } catch (err) {
-      setError("Error while fetching report.");
-      setReportData(null);
-    } finally {
-      setLoading(false);
+    } catch (error) {
+      setTimeout(() => {
+        setError(error.response?.data?.message);
+        setReportData(null);
+        setLoading(false);
+      }, 1500);
     }
   };
 
   const fetchOverallReport = async () => {
-    setLoading(true);
+    setReportData(null);
     setError(null);
+    setLoading(true);
     const token = localStorage.getItem("accessToken");
     if (!token) {
       setError("Access token not found.");
@@ -118,17 +196,26 @@ function ClassroomReport() {
         { headers: { accessToken: token } }
       );
       if (response.data.success) {
-        setViewReportType('overall')
-        setReportData(response.data.data);
+        setTimeout(() => {
+          setViewReportType("overall");
+          setReportData(response.data.data);
+          setLoading(false);
+        }, 1500);
       } else {
-        setError("Failed to fetch overall report.");
-        setReportData(null);
+        setTimeout(() => {
+          setError(response.data.message);
+          setReportData(null);
+          setLoading(false);
+        }, 1500);
       }
     } catch (error) {
-      setError(error.response?.data?.message || "Error while fetching report.");
-      setReportData(null);
-    } finally {
-      setLoading(false);
+      setTimeout(() => {
+        setError(
+          error.response?.data?.message || "Error while fetching report."
+        );
+        setReportData(null);
+        setLoading(false);
+      }, 1500);
     }
   };
 
@@ -136,9 +223,13 @@ function ClassroomReport() {
   // Unified Generate Report handler
   // ------------------------------
   const handleGenerateReport = () => {
-    setReportData(null);
-    setError(null);
-
+    // If no student IDs available for student report, do nothing.
+    const studentOptions =
+      role === "teacher" ? teacherStudents : committeeStudents;
+    if (reportType === "student" && studentOptions.length === 0) {
+      setError("No reports available to fetch");
+      return;
+    }
     if (reportType === "student") {
       fetchStudentReport();
     } else if (reportType === "average") {
@@ -149,7 +240,7 @@ function ClassroomReport() {
   };
 
   // ------------------------------
-  // Download handler
+  // Download handler (unchanged)
   // ------------------------------
   const downloadReport = () => {
     // If "overall" -> XLSX
@@ -324,10 +415,11 @@ function ClassroomReport() {
     }
   };
 
-  const isStudentOrAverage = viewReportType === "student" || viewReportType === "average";
-
+  // ------------------------------
+  // Render
+  // ------------------------------
   return (
-    <div className="min-h-screen bg-white flex flex-col flex-wrap">
+    <div className="min-h-screen bg-white flex flex-col">
       {/* Navbar */}
       <Navbar
         navItems={navItems}
@@ -335,81 +427,185 @@ function ClassroomReport() {
         buttonStyle="border border-red-500 text-red-500 py-2 px-4 rounded-md hover:bg-red-500 hover:text-white"
       />
       <div className="h-16"></div>
-      {/* Top Card */}
-      <div className="flex justify-between items-center my-4 mx-4 p-4 bg-white rounded-md shadow-md">
-        {/* Left Form Section */}
-        <div className="w-1/2 flex flex-col">
-          <p className="font-inter font-semibold text-[24px] leading-[100%] tracking-[-0.04em] mb-2">
-            Classroom Report Summary
-          </p>
-          <p className="font-inter font-medium text-[14px] leading-[100%] tracking-[-0.04em] mb-6">
-            Please select all the fields to generate Classroom Report Summary
-          </p>
-          <label className="font-inter font-medium text-[14px] leading-[100%] tracking-[-0.04em] mb-2">
-            Student ID
-          </label>
-          <input
-            type="text"
-            value={studentId}
-            onChange={(e) => setStudentId(e.target.value)}
-            className="w-full px-3 py-2 mb-4 rounded-md border-2 border-black focus:outline-none"
-            placeholder="Enter Student ID"
-            disabled={reportType !== "student"}
-          />
-          <div className="flex space-x-4 mb-4">
-            {(teacher_access || committee_access) && (
-              <div className="w-1/2">
-                <label className="font-inter font-medium text-[14px] leading-[100%] tracking-[-0.04em] mb-2">
-                  Role
-                </label>
-                <select
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
-                  className="border-2 border-black rounded-lg w-full px-3 py-2 focus:outline-none"
-                >
-                  {teacher_access && <option value="teacher">Teacher</option>}
-                  {committee_access && <option value="committee">Committee</option>}
-                </select>
-              </div>
-            )}
-            <div className="w-1/2">
-              <label className="font-inter font-medium text-[14px] leading-[100%] tracking-[-0.04em] mb-2">
-                Report Type
-              </label>
-              <select
-                value={reportType}
-                onChange={(e) => setReportType(e.target.value)}
-                className="border-2 border-black rounded-lg w-full px-3 py-2 focus:outline-none"
+
+      <AnimatePresence mode="wait">
+        {studentsLoading ? (
+          <div className="container mx-auto px-6 mt-24">
+            <div className="bg-white shadow-md rounded-lg p-6">
+              <motion.div
+                className="animate-pulse"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4, ease: "easeInOut" }}
               >
-                <option value="student">Student</option>
-                <option value="average">Average</option>
-                <option value="overall">Overall</option>
-              </select>
+                <div className="h-6 bg-gray-300 rounded w-1/3 mb-4"></div>
+                <div className="h-4 bg-gray-300 rounded w-1/2 mb-2"></div>
+                <div className="h-4 bg-gray-300 rounded w-1/4 mb-2"></div>
+              </motion.div>
             </div>
           </div>
-          <button
-            onClick={handleGenerateReport}
-            disabled={loading}
-            className={`w-full bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] transition easeInOut ${
-              loading ? "opacity-50 cursor-not-allowed" : ""
-            }`}
+        ) : studentsError ? (
+          <p className="text-red-500 my=4 text-center font-bold">{error}</p>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.4, ease: "easeInOut" }}
           >
-            Generate Report
-          </button>
+            <div className="flex justify-between items-center my-4 mx-4 p-4 bg-white rounded-md shadow-md">
+              {/* Left Form Section */}
+              <div className="w-1/2 flex flex-col">
+                <p className="font-inter font-semibold text-[24px] leading-[100%] tracking-[-0.04em] mb-2">
+                  {classroom_name} Report
+                </p>
+                <p className="font-inter font-medium text-[14px] leading-[100%] tracking-[-0.04em] mb-6">
+                  Please select all the fields to generate {classroom_name}{" "}
+                  Report
+                </p>
+                <label className="font-inter font-medium text-[14px] leading-[100%] tracking-[-0.04em] mb-2">
+                  Student ID
+                </label>
+                <select
+                  value={studentId}
+                  disabled={
+                    reportType !== "student" ||
+                    (role === "teacher" && teacherStudents.length <= 0) ||
+                    (role === "committee" && committeeStudents.length <= 0)
+                  }
+                  onChange={(e) => setStudentId(e.target.value)}
+                  className="w-full px-3 py-2 mb-4 rounded-md border-2 border-black focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {role === "teacher"
+                    ? teacherStudents.map((id) => (
+                        <option key={id} value={id}>
+                          {id}
+                        </option>
+                      ))
+                    : committeeStudents.map((id) => (
+                        <option key={id} value={id}>
+                          {id}
+                        </option>
+                      ))}
+                </select>
+                <div className="flex space-x-4 mb-4">
+                  {(teacher_access || committee_access) && (
+                    <div className="w-1/2">
+                      <label className="font-inter font-medium text-[14px] leading-[100%] tracking-[-0.04em] mb-2">
+                        Role
+                      </label>
+                      <select
+                        value={role}
+                        onChange={(e) => setRole(e.target.value)}
+                        className="border-2 border-black rounded-lg w-full px-3 py-2 focus:outline-none"
+                      >
+                        {teacher_access && (
+                          <option value="teacher">Teacher</option>
+                        )}
+                        {committee_access && (
+                          <option value="committee">Committee</option>
+                        )}
+                      </select>
+                    </div>
+                  )}
+                  <div className="w-1/2">
+                    <label className="font-inter font-medium text-[14px] leading-[100%] tracking-[-0.04em] mb-2">
+                      Report Type
+                    </label>
+                    <select
+                      value={reportType}
+                      onChange={(e) => setReportType(e.target.value)}
+                      className="border-2 border-black rounded-lg w-full px-3 py-2 focus:outline-none"
+                    >
+                      <option value="student">Student</option>
+                      <option value="average">Average</option>
+                      <option value="overall">Overall</option>
+                    </select>
+                  </div>
+                </div>
+                <button
+                  onClick={handleGenerateReport}
+                  disabled={
+                    loading ||
+                    (role === "teacher"
+                      ? teacherStudents.length > 0
+                        ? false
+                        : true
+                      : committeeStudents.length > 0
+                      ? false
+                      : true)
+                  }
+                  className={`w-full bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] transition easeInOut ${
+                    loading ||
+                    (role === "teacher" && teacherStudents.length <= 0) ||
+                    (role === "committee" && committeeStudents.length <= 0)
+                      ? "opacity-50 cursor-not-allowed"
+                      : ""
+                  }`}
+                >
+                  Generate Report
+                </button>
+                {role === "teacher" && teacherStudents.length <= 0 && (
+                  <p className="text-red-500 mt-2 font-bold">
+                    No reports available to fetch
+                  </p>
+                )}
+                {role === "committee" && committeeStudents.length <= 0 && (
+                  <p className="text-red-500 mt-2 font-bold">
+                    No reports available to fetch
+                  </p>
+                )}
+              </div>
+              {/* Right Image Section */}
+              <div className="w-1/2 h-full px-4 py-4 flex items-center justify-center">
+                <img
+                  src={`${process.env.PUBLIC_URL}/assets/classImage.png`}
+                  alt="Image Here"
+                  className="w-full h-full object-cover rounded-lg"
+                />
+              </div>
+            </div>
+            <hr className="border-t border-gray-800 my-2 mx-4" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {/* Top Card */}
+
+      {loading && (
+        <div className="flex justify-center mt-4 mb-4">
+          <svg
+            className="animate-spin h-5 w-5 text-blue-500"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <circle
+              className="opacity-25"
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              strokeWidth="4"
+            ></circle>
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8v8H4z"
+            ></path>
+          </svg>
+          <div className="mx-2">
+            <span>Please wait. This may take a while</span>
+          </div>
         </div>
-        {/* Right Image Section */}
-        <div className="w-1/2 h-full px-4 py-4 flex items-center justify-center">
-          <img
-            src={`${process.env.PUBLIC_URL}/assets/classImage.png`}
-            alt="Image Here"
-            className="w-full h-full object-cover rounded-lg"
-          />
-        </div>
-      </div>
-      <hr className="border-t border-gray-800 my-2 mx-4" />
+      )}
+      {error && (
+        <p className="text-red-500 mb-4 text-center font-bold">{error}</p>
+      )}
+
       {/* Report Display Card */}
       {reportData && (
-        <div className="flex flex-col justify-between items-center my-4 mx-4 p-4 bg-white rounded-md shadow-md">
+        <div className="flex flex-col my-4 mx-4 p-4 bg-white rounded-md shadow-md">
           {/* Header Row: Title + Download Button */}
           <div className="w-full flex justify-between items-center mb-4">
             {viewReportType === "student" && (
@@ -435,151 +631,200 @@ function ClassroomReport() {
             </button>
           </div>
           {/* Student/Average Report Details */}
-          {isStudentOrAverage && reportData.grades && (
-            <div className="flex flex-col space-y-4">
-              {reportData.summary && (
-                <div className="mb-8">
-                  <p className="font-inter font-semibold text-[24px] leading-[100%] tracking-[-0.04em] mb-2">
-                    Summary
-                  </p>
-                  <p className="text-black">{reportData.summary}</p>
-                </div>
-              )}
-              <div className="w-full flex flex-wrap items-stretch justify-center mb-4">
-                <div className="w-1/2 flex flex-col px-4">
-                  <h3 className="text-lg font-bold text-center mb-2">PO Grades</h3>
-                  <div className="h-full flex-grow">
-                    <table className="w-full border border-gray-200 h-full">
-                      <thead className="bg-gray-100">
-                        <tr>
-                          <th className="px-4 py-2 border border-gray-200 text-center">PO</th>
-                          <th className="px-4 py-2 border border-gray-200 text-center">Grade (%)</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Object.entries(reportData.grades.po_grades).map(([poKey, poValue]) => (
-                          <tr key={poKey}>
-                            <td className="px-4 py-2 border border-gray-200 text-center">{poKey}</td>
-                            <td className="px-4 py-2 border border-gray-200 text-center">{poValue}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+          {(viewReportType === "student" || viewReportType === "average") &&
+            reportData.grades && (
+              <div className="flex flex-col space-y-4">
+                {reportData.summary && (
+                  <div className="mb-8">
+                    <p className="font-inter font-semibold text-[24px] leading-[100%] tracking-[-0.04em] mb-2">
+                      Summary
+                    </p>
+                    <p className="text-black">{reportData.summary}</p>
                   </div>
-                </div>
-                <div className="w-1/2 flex flex-col px-4">
-                  <h3 className="text-lg font-bold text-center mb-2">Cognitive Grades</h3>
-                  <div className="h-full flex-grow">
-                    <table className="w-full border border-gray-200 h-full">
-                      <thead className="bg-gray-100">
-                        <tr>
-                          <th className="px-4 py-2 border border-gray-200 text-center">Category</th>
-                          <th className="px-4 py-2 border border-gray-200 text-center">Grade (%)</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Object.entries(reportData.grades.cognitive_grades).map(([cogKey, cogValue]) => (
-                          <tr key={cogKey}>
-                            <td className="px-4 py-2 border border-gray-200 text-center">{cogKey}</td>
-                            <td className="px-4 py-2 border border-gray-200 text-center">{cogValue}</td>
+                )}
+                <div className="w-full flex flex-wrap items-stretch justify-center mb-4">
+                  <div className="w-1/2 flex flex-col px-4">
+                    <h3 className="text-lg font-bold text-center mb-2">
+                      PO Grades
+                    </h3>
+                    <div className="h-full flex-grow">
+                      <table className="w-full border border-gray-200 h-full">
+                        <thead className="bg-black text-white">
+                          <tr>
+                            <th className="px-4 py-2 border border-gray-200 text-center">
+                              PO
+                            </th>
+                            <th className="px-4 py-2 border border-gray-200 text-center">
+                              Grade (%)
+                            </th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody>
+                          {Object.entries(reportData.grades.po_grades).map(
+                            ([poKey, poValue]) => (
+                              <tr key={poKey}>
+                                <td className="px-4 py-2 border border-gray-200 text-center">
+                                  {poKey}
+                                </td>
+                                <td className="px-4 py-2 border border-gray-200 text-center">
+                                  {poValue}
+                                </td>
+                              </tr>
+                            )
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
-                </div>
-              </div>
-              <div className="w-full flex flex-wrap items-center justify-center mb-4">
-                <div className="w-1/2 flex flex-col px-4">
-                  <BarChart
-                    ref={poChartRef}
-                    title="PO Grades"
-                    labels={Object.keys(reportData.grades.po_grades || {})}
-                    data={reportData.grades.po_grades || {}}
-                  />
-                </div>
-                <div className="w-1/2 flex flex-col px-4">
-                  <BarChart
-                    ref={cogChartRef}
-                    title="Cognitive Grades"
-                    labels={Object.keys(reportData.grades.cognitive_grades || {})}
-                    data={reportData.grades.cognitive_grades || {}}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-          {/* Overall Report Table */}
-          {viewReportType === "overall" && Array.isArray(reportData) && reportData.length > 0 && (
-            <div className="w-full">
-              {(() => {
-                const firstItem = reportData[0];
-                const firstStudentId = Object.keys(firstItem)[0];
-                const { po_grades: firstPo, cognitive_grades: firstCog } = firstItem[firstStudentId];
-                const poKeys = Object.keys(firstPo);
-                const cogKeys = Object.keys(firstCog);
-                return (
-                  <table className="w-full border border-gray-200">
-                    <thead className="bg-gray-100">
-                      <tr>
-                        <th rowSpan={2} className="border border-gray-300 px-4 py-2 text-center">
-                          Student ID
-                        </th>
-                        <th colSpan={poKeys.length} className="border border-gray-300 px-4 py-2 text-center">
-                          PO%
-                        </th>
-                        <th colSpan={cogKeys.length} className="border border-gray-300 px-4 py-2 text-center">
-                          Cognitive Domain%
-                        </th>
-                      </tr>
-                      <tr>
-                        {poKeys.map((poKey) => (
-                          <th key={poKey} className="border border-gray-300 px-4 py-2 text-center">
-                            {poKey}
-                          </th>
-                        ))}
-                        {cogKeys.map((cogKey) => (
-                          <th key={cogKey} className="border border-gray-300 px-4 py-2 text-center">
-                            {cogKey}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {reportData.map((item) => {
-                        const studentId = Object.keys(item)[0];
-                        const { po_grades, cognitive_grades } = item[studentId];
-                        return (
-                          <tr key={studentId}>
-                            <td className="border border-gray-300 px-4 py-2 text-center">{studentId}</td>
-                            {poKeys.map((poKey) => (
-                              <td key={poKey} className="border border-gray-300 px-4 py-2 text-center">
-                                {po_grades[poKey]}
+                  <div className="w-1/2 flex flex-col px-4">
+                    <h3 className="text-lg font-bold text-center mb-2">
+                      Cognitive Grades
+                    </h3>
+                    <div className="h-full flex-grow">
+                      <table className="w-full border border-gray-200 h-full">
+                        <thead className="bg-black text-white">
+                          <tr>
+                            <th className="px-4 py-2 border border-gray-200 text-center">
+                              Category
+                            </th>
+                            <th className="px-4 py-2 border border-gray-200 text-center">
+                              Grade (%)
+                            </th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {Object.entries(
+                            reportData.grades.cognitive_grades
+                          ).map(([cogKey, cogValue]) => (
+                            <tr key={cogKey}>
+                              <td className="px-4 py-2 border border-gray-200 text-center">
+                                {cogKey}
                               </td>
+                              <td className="px-4 py-2 border border-gray-200 text-center">
+                                {cogValue}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+                <div className="w-full flex flex-wrap items-center justify-center mb-4">
+                  <div className="w-1/2 flex flex-col px-4">
+                    <BarChart
+                      ref={poChartRef}
+                      title="PO Grades"
+                      labels={Object.keys(reportData.grades.po_grades || {})}
+                      data={reportData.grades.po_grades || {}}
+                    />
+                  </div>
+                  <div className="w-1/2 flex flex-col px-4">
+                    <BarChart
+                      ref={cogChartRef}
+                      title="Cognitive Grades"
+                      labels={Object.keys(
+                        reportData.grades.cognitive_grades || {}
+                      )}
+                      data={reportData.grades.cognitive_grades || {}}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+          {/* Overall Report Table */}
+          {viewReportType === "overall" &&
+            Array.isArray(reportData) &&
+            reportData.length > 0 && (
+              <div className="w-full">
+                {(() => {
+                  const firstItem = reportData[0];
+                  const firstStudentId = Object.keys(firstItem)[0];
+                  const { po_grades: firstPo, cognitive_grades: firstCog } =
+                    firstItem[firstStudentId];
+                  const poKeys = Object.keys(firstPo);
+                  const cogKeys = Object.keys(firstCog);
+                  return (
+                    // Wrap the table in a container with horizontal scrolling
+                    <div className="w-full overflow-x-auto overflow-y-auto max-h-96">
+                      <table className="min-w-full border border-gray-200">
+                        <thead className="bg-gray-100">
+                          <tr>
+                            <th
+                              rowSpan={2}
+                              className="border border-gray-300 px-4 py-2 text-center"
+                            >
+                              Student ID
+                            </th>
+                            <th
+                              colSpan={poKeys.length}
+                              className="border border-gray-300 px-4 py-2 text-center"
+                            >
+                              PO%
+                            </th>
+                            <th
+                              colSpan={cogKeys.length}
+                              className="border border-gray-300 px-4 py-2 text-center"
+                            >
+                              Cognitive Domain%
+                            </th>
+                          </tr>
+                          <tr>
+                            {poKeys.map((poKey) => (
+                              <th
+                                key={poKey}
+                                className="border border-gray-300 px-4 py-2 text-center"
+                              >
+                                {poKey}
+                              </th>
                             ))}
                             {cogKeys.map((cogKey) => (
-                              <td key={cogKey} className="border border-gray-300 px-4 py-2 text-center">
-                                {cognitive_grades[cogKey]}
-                              </td>
+                              <th
+                                key={cogKey}
+                                className="border border-gray-300 px-4 py-2 text-center"
+                              >
+                                {cogKey}
+                              </th>
                             ))}
                           </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                );
-              })()}
-            </div>
-          )}
+                        </thead>
+                        <tbody>
+                          {reportData.map((item) => {
+                            const studentId = Object.keys(item)[0];
+                            const { po_grades, cognitive_grades } =
+                              item[studentId];
+                            return (
+                              <tr key={studentId}>
+                                <td className="border border-gray-300 px-4 py-2 text-center">
+                                  {studentId}
+                                </td>
+                                {poKeys.map((poKey) => (
+                                  <td
+                                    key={poKey}
+                                    className="border border-gray-300 px-4 py-2 text-center"
+                                  >
+                                    {po_grades[poKey]}
+                                  </td>
+                                ))}
+                                {cogKeys.map((cogKey) => (
+                                  <td
+                                    key={cogKey}
+                                    className="border border-gray-300 px-4 py-2 text-center"
+                                  >
+                                    {cognitive_grades[cogKey]}
+                                  </td>
+                                ))}
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
         </div>
-      )}
-      {loading && (
-        <p className="text-blue-500 font-semibold mt-4 mx-4">
-          Loading report...
-        </p>
-      )}
-      {error && (
-        <p className="text-red-500 font-semibold mt-4 mx-4">{error}</p>
       )}
     </div>
   );

@@ -129,7 +129,7 @@ function Login() {
               Welcome back to OBE<span className="text-blue-500">lytics</span>
             </h2>
             <p className="text-black mb-2 text-left">
-              A single source for Outcome Based Education
+              A single source platform for Outcome Based Education
             </p>
 
             <form onSubmit={handleSubmit}>

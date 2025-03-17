@@ -3,7 +3,7 @@ import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import ClassCard from "../components/ClassCard";
-
+import { FaBars, FaTimes } from "react-icons/fa"; // Import icons for mobile actions
 import { motion, AnimatePresence } from "framer-motion";
 
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
@@ -25,6 +25,7 @@ function Dashboard() {
   const [loadingClasses, setLoadingClasses] = useState(true);
   const [loadingJoin, setLoadingJoin] = useState(false);
   const [loadingCreate, setLoadingCreate] = useState(false);
+  const [isActionMenuOpen, setIsActionMenuOpen] = useState(false); // State for mobile actions menu
   const navigate = useNavigate();
 
   const navItems = [{ label: "Semester Report", path: "/report" }];
@@ -181,16 +182,23 @@ function Dashboard() {
     });
   };
 
+  const toggleActionMenu = () => {
+    setIsActionMenuOpen(!isActionMenuOpen);
+  };
+
   return (
-    <div>
+    <div className="bg-white min-h-screen overflow-x-hidden">
       {/* Navbar */}
       <Navbar navItems={navItems} logout={true} />
-
+      <div className="h-16"></div>
       {/* Page Content */}
-      <div className="px-20 mt-24 mb-6 mr-6">
+      <div className="bg-white flex flex-col md:px-20 mt-8 mx-4">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-left">Your Classes</h2>
-          <div className="space-x-4">
+          <h2 className="w-1/2 text-xl font-semibold font-inter text-[16px] tracking-[-0.04em] text-left">
+            Your Classes
+          </h2>
+          {/* Desktop Buttons */}
+          <div className="hidden md:flex space-x-4">
             <button
               onClick={() => setIsCreateModalOpen(true)}
               className="bg-green-700 text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-green-800"
@@ -204,50 +212,83 @@ function Dashboard() {
               Join Class
             </button>
           </div>
+          {/* Mobile Hamburger Menu for Actions */}
+          <div className="flex md:hidden relative">
+            <button
+              onClick={toggleActionMenu}
+              className="text-black focus:outline-none"
+            >
+              {isActionMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+            </button>
+            {isActionMenuOpen && (
+              <div className="absolute right-0 mt-6 w-48 bg-white shadow-md rounded-md border border-gray-300 py-2 px-4 flex flex-col space-y-2">
+                <button
+                  onClick={() => {
+                    setIsCreateModalOpen(true);
+                    setIsActionMenuOpen(false);
+                  }}
+                  className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100 text-left"
+                >
+                  Create Class
+                </button>
+                <button
+                  onClick={() => {
+                    setIsJoinModalOpen(true);
+                    setIsActionMenuOpen(false);
+                  }}
+                  className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100 text-left"
+                >
+                  Join Class
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Smooth Transition from Skeleton to Class Cards */}
-        <AnimatePresence mode="wait">
-          {loadingClasses ? (
-            // Skeleton Loader (Motion Container)
-            <motion.div
-              key="skeleton"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-            >
-              {[...Array(3)].map((_, idx) => (
-                <div
-                  key={idx}
-                  className="bg-gray-200 animate-pulse h-32 w-full rounded-md"
-                />
-              ))}
-            </motion.div>
-          ) : (
-            // Actual Class Cards (Motion Container)
-            <motion.div
-              key="classcards"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-            >
-              {classes.map((classItem) => (
-                <ClassCard
-                  key={classItem._id}
-                  title={classItem.name}
-                  year={classItem.course}
-                  semester={classItem.course_code}
-                  image={process.env.PUBLIC_URL + "/assets/classImage.png"}
-                  onClick={() => handleViewClass(classItem._id)}
-                />
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <div className="flex flex-col md:flex-row mt-4 mb-4">
+          <AnimatePresence mode="wait">
+            {loadingClasses ? (
+              // Skeleton Loader (Motion Container)
+              <motion.div
+                key="skeleton"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+              >
+                {[...Array(3)].map((_, idx) => (
+                  <div
+                    key={idx}
+                    className="bg-gray-200 animate-pulse h-32 w-full rounded-md"
+                  />
+                ))}
+              </motion.div>
+            ) : (
+              // Actual Class Cards (Motion Container)
+              <motion.div
+                key="classcards"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.4 }}
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full"
+              >
+                {classes.map((classItem) => (
+                  <ClassCard
+                    key={classItem._id}
+                    title={classItem.name}
+                    year={classItem.course}
+                    semester={classItem.course_code}
+                    image={process.env.PUBLIC_URL + "/assets/classImage.png"}
+                    onClick={() => handleViewClass(classItem._id)}
+                  />
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
       {/* Join Modal */}
@@ -260,7 +301,7 @@ function Dashboard() {
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
         >
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-lg w-[400px] p-6">
+            <div className="bg-white rounded-lg shadow-lg w-[300px] md:w-[400px] p-6">
               <h2 className="text-xl font-semibold mb-2 text-left">
                 Join a Classroom
               </h2>
@@ -340,7 +381,7 @@ function Dashboard() {
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
         >
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg shadow-lg w-[400px] p-6">
+            <div className="bg-white rounded-lg shadow-lg w-[300px] md:w-[400px] p-6">
               <h2 className="text-xl font-semibold mb-4 text-left">
                 Create a Classroom
               </h2>
@@ -352,6 +393,7 @@ function Dashboard() {
               </label>
               <input
                 type="text"
+                spellCheck={false}
                 value={newClass.name}
                 onChange={(e) =>
                   setNewClass({ ...newClass, name: e.target.value })
@@ -367,6 +409,7 @@ function Dashboard() {
               </label>
               <input
                 type="text"
+                spellCheck={false}
                 value={newClass.course}
                 onChange={(e) =>
                   setNewClass({ ...newClass, course: e.target.value })
@@ -382,6 +425,7 @@ function Dashboard() {
               </label>
               <input
                 type="text"
+                spellCheck={false}
                 value={newClass.course_code}
                 onChange={(e) =>
                   setNewClass({ ...newClass, course_code: e.target.value })

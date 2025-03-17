@@ -2,7 +2,7 @@ import React from 'react';
 
 function ClassCard({ title, year, semester, image,onClick }) {
   return (
-    <div className="bg-white shadow-md rounded-lg overflow-hidden">
+    <div className="w-full bg-white shadow-md rounded-lg overflow-hidden">
       {/* Image */}
       <img src={image} alt={title} className="w-full h-40 object-cover" />
 

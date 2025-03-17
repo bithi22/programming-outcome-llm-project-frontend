@@ -107,9 +107,10 @@ function Login() {
         navItems={navItems}
         actionButton={actionButton}
         buttonStyle="bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] "
-        className="fixed top-0 left-0 w-full z-50"
       />
-      <div className="pt-4 items-center justify-center">
+      <div className="h-16"></div>
+
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)]">
         {/* Vector Images (scaled by viewport width) */}
         <img
           src="/assets/Vector1.png"
@@ -122,16 +123,13 @@ function Login() {
           className="absolute top-[4rem] right-0 w-[25vw] md:w-[20vw] h-auto"
         />
 
-        {/* Main Container */}
-        <div className="flex flex-col items-center justify-center w-full min-h-screen">
           {/* Login Card */}
-          <div className="relative bg-white shadow-lg rounded-xl p-8 w-11/12 max-w-sm md:max-w-md">
+          <div className="flex flex-col bg-white shadow-lg rounded-xl p-8 w-11/12 max-w-sm md:max-w-md my-4 z-20">
             <h2 className="text-2xl font-bold mb-2 text-left">
-              Welcome back to Shamik
-              <span className="text-blue-500">LLM</span>
+              Welcome back to OBE<span className="text-blue-500">lytics</span>
             </h2>
             <p className="text-black mb-2 text-left">
-              Register to ShamikLLM and Unleash the Power of Ajke Thak.
+              A single source for Outcome Based Education
             </p>
 
             <form onSubmit={handleSubmit}>
@@ -266,7 +264,6 @@ function Login() {
               </NavLink>
             </p>
           </div>
-        </div>
       </div>
     </div>
   );

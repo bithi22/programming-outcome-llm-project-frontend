@@ -3,9 +3,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Navbar from "../components/Navbar";
 import { motion, AnimatePresence } from "framer-motion";
+import { FaBars, FaTimes } from "react-icons/fa";
 
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
-
 
 function QuestionDisplay() {
   const location = useLocation();
@@ -24,9 +24,11 @@ function QuestionDisplay() {
   const [loadingUpdate, setLoadingUpdate] = useState(false);
   const [loadingUpdateError, setLoadingUpdateError] = useState("");
 
-  const navItems = [];
+  // New state for mobile hamburger menus
+  const [mobileMenuGroup1Open, setMobileMenuGroup1Open] = useState(false);
+  const [mobileMenuGroup2Open, setMobileMenuGroup2Open] = useState(false);
 
-  const actionButton = { label: "Logout", path: "/logout" };
+  const navItems = [];
 
   // Options for the dropdowns
   const poOptions = Array.from({ length: 12 }, (_, i) => `PO${i + 1}`);
@@ -117,6 +119,15 @@ function QuestionDisplay() {
         ]?.[path[2]]?.[field] || "";
     }
     return value;
+  };
+
+  const handleCancelEditing = () => {
+    setIsEditing(false);
+    setEditedName(question.name);
+    setEditedWeight(question.weight);
+    setEditedMapping(JSON.parse(JSON.stringify(question.co_po_mapping || {})));
+    setLoadingUpdateError("");
+    setLoadingUpdate(false);
   };
 
   const updateMappingValue = (path, field, newValue) => {
@@ -299,7 +310,7 @@ function QuestionDisplay() {
               {row?.description || ""}
             </div>
           </td>
-          <td className="px-4 py-2 border">
+          <td className="px-4 py-2 border text-center">
             {isEditing && row.marks ? (
               <select
                 value={getMappingValue(path, "PO")}
@@ -317,7 +328,7 @@ function QuestionDisplay() {
               <span>{getMappingValue(path, "PO") || row?.PO || ""}</span>
             )}
           </td>
-          <td className="px-4 py-2 border">
+          <td className="px-4 py-2 border text-center">
             {isEditing && row.marks ? (
               <select
                 value={getMappingValue(path, "Cognitive Domain")}
@@ -341,7 +352,7 @@ function QuestionDisplay() {
               </span>
             )}
           </td>
-          <td className="px-4 py-2 border">
+          <td className="px-4 py-2 border text-center">
             <span>{row?.marks || ""}</span>
           </td>
         </tr>
@@ -399,15 +410,13 @@ function QuestionDisplay() {
   }
 
   return (
-    <div>
-      <Navbar
-        navItems={navItems} 
-        logout={true}
-        />
+    <div className="flex flex-col bg-white min-h-screen overflow-x-hidden">
+      <Navbar navItems={navItems} logout={true} />
+      <div className="h-16"></div>
 
       <AnimatePresence mode="wait">
         {isLoading ? (
-          <div className="container mx-auto px-6 mt-24 mb-6">
+          <div className="container mx-auto px-6 mt-8 mb-6">
             <div className="bg-white shadow-md rounded-lg p-6">
               <motion.div
                 className="animate-pulse"
@@ -429,11 +438,11 @@ function QuestionDisplay() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.4, ease: "easeInOut" }}
           >
-            <div className="container mx-auto px-6 mt-24 mb-6">
+            <div className="container mx-auto px-6 mt-8 mb-6">
               <div className="flex justify-between items-center mb-6">
                 <div>
                   {isEditing ? (
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-4">
+                    <div className="flex flex-col md:flex-row md:items-center md:space-x-4 space-y-2">
                       <label
                         htmlFor="question_name"
                         className="block font-bold text-left text-black"
@@ -469,8 +478,8 @@ function QuestionDisplay() {
                           if (isNaN(newVal) || newVal < 1) {
                             newVal = 1;
                           }
-                          if(newVal>100){
-                            newVal = 100
+                          if (newVal > 100) {
+                            newVal = 100;
                           }
                           setEditedWeight(newVal);
                         }}
@@ -489,23 +498,63 @@ function QuestionDisplay() {
                     </h1>
                   )}
                 </div>
-                <div className="flex space-x-2">
+                {/* Group 1 Buttons: Marksheet & Reports */}
+                {/* Desktop inline buttons */}
+                <div className="hidden lg:flex space-x-2">
                   <button
                     onClick={handleGenerateResult}
                     disabled={isLoading}
-                    className={`bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] ${
-                      isLoading ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
+                    className="bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Marksheet
                   </button>
                   {question?.report_submitted && (
                     <button
                       onClick={handleShowResult}
-                      className={`bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC]`}
+                      className="bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC]"
                     >
                       Reports
                     </button>
+                  )}
+                </div>
+
+                {/* Mobile hamburger for Group 1 */}
+                <div className="lg:hidden relative z-20">
+                  <button
+                    onClick={() =>
+                      setMobileMenuGroup1Open(!mobileMenuGroup1Open)
+                    }
+                    className="text-black focus:outline-none"
+                  >
+                    {mobileMenuGroup1Open ? (
+                      <FaTimes size={24} />
+                    ) : (
+                      <FaBars size={24} />
+                    )}
+                  </button>
+                  {mobileMenuGroup1Open && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white shadow-md rounded-md border border-gray-300 py-2 px-4 flex flex-col space-y-2">
+                      <button
+                        onClick={() => {
+                          handleGenerateResult();
+                          setMobileMenuGroup1Open(false);
+                        }}
+                        className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
+                      >
+                        Marksheet
+                      </button>
+                      {question?.report_submitted && (
+                        <button
+                          onClick={() => {
+                            handleShowResult();
+                            setMobileMenuGroup1Open(false);
+                          }}
+                          className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
+                        >
+                          Reports
+                        </button>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -513,51 +562,90 @@ function QuestionDisplay() {
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-lg font-semibold ">CO-PO Mappings</h2>
-                  {!isEditing && (
-                    <>
+                  {/* Group 2 Buttons */}
+                  {/* Desktop inline buttons */}
+                  {!isEditing ? (
+                    <div className="hidden lg:flex">
                       <button
                         onClick={() => setIsEditing(true)}
                         disabled={isLoading}
-                        className="border-2 border-[#3941FF] text-[#3941FF] justify-end py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] hover:text-white hover:border-[#2C36CC] transition"
+                        className="border-2 border-[#3941FF] text-[#3941FF] py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] hover:text-white hover:border-[#2C36CC] transition"
                       >
                         Edit Table
                       </button>
-                    </>
-                  )}
-                  {isEditing && (
-                    <div className="flex items-center justify-end space-x-4">
+                    </div>
+                  ) : (
+                    <div className="hidden lg:flex space-x-4">
                       <button
                         onClick={handleSaveChanges}
                         disabled={loadingUpdate}
-                        className={`bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] ${
-                          loadingUpdate ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
+                        className="bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Save Changes
                       </button>
                       <button
-                        onClick={() => {
-                          // Reset edits on cancel
-                          setIsEditing(false);
-                          setEditedName(question.name);
-                          setEditedWeight(question.weight);
-                          setEditedMapping(
-                            JSON.parse(
-                              JSON.stringify(question.co_po_mapping || {})
-                            )
-                          );
-                          setLoadingUpdateError("");
-                          setLoadingUpdate(false);
-                        }}
+                        onClick={handleCancelEditing}
                         disabled={loadingUpdate}
-                        className={`bg-gray-300 text-black py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-gray-400 ${
-                          loadingUpdate ? "opacity-50 cursor-not-allowed" : ""
-                        }`}
+                        className="bg-gray-300 text-black py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Cancel
                       </button>
                     </div>
                   )}
+                  {/* Mobile hamburger for Group 2 */}
+                  <div className="lg:hidden relative">
+                    <button
+                      onClick={() =>
+                        setMobileMenuGroup2Open(!mobileMenuGroup2Open)
+                      }
+                      className="text-black focus:outline-none"
+                    >
+                      {mobileMenuGroup2Open ? (
+                        <FaTimes size={24} />
+                      ) : (
+                        <FaBars size={24} />
+                      )}
+                    </button>
+                    {mobileMenuGroup2Open && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white shadow-md rounded-md border border-gray-300 py-2 px-4 flex flex-col space-y-2">
+                        {!isEditing ? (
+                          <button
+                            onClick={() => {
+                              setIsEditing(true);
+                              setMobileMenuGroup2Open(false);
+                            }}
+                            disabled={isLoading}
+                            className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
+                          >
+                            Edit Table
+                          </button>
+                        ) : (
+                          <>
+                            <button
+                              onClick={() => {
+                                handleSaveChanges();
+                                setMobileMenuGroup2Open(false);
+                              }}
+                              disabled={loadingUpdate}
+                              className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
+                            >
+                              Save Changes
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleCancelEditing();
+                                setMobileMenuGroup2Open(false);
+                              }}
+                              disabled={loadingUpdate}
+                              className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {loadingUpdateError && (
@@ -597,12 +685,12 @@ function QuestionDisplay() {
                   <table className="table-auto w-full text-left border border-gray-300">
                     <thead className="bg-black text-white">
                       <tr>
-                        <th className="px-4 py-2 border">Question</th>
-                        <th className="px-4 py-2 border">Mapped PO</th>
-                        <th className="px-4 py-2 border">
+                        <th className="px-4 py-2 border text-center">Question</th>
+                        <th className="px-4 py-2 border text-center">Mapped PO</th>
+                        <th className="px-4 py-2 border text-center">
                           Mapped Cognitive Domain
                         </th>
-                        <th className="px-4 py-2 border">Marks</th>
+                        <th className="px-4 py-2 border text-center">Marks</th>
                       </tr>
                     </thead>
                     <tbody>{renderMappings()}</tbody>

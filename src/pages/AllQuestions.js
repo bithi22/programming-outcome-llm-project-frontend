@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { jsPDF } from "jspdf";
 import Navbar from "../components/Navbar";
 import { motion, AnimatePresence } from "framer-motion";
+import { FaBars, FaTimes } from "react-icons/fa"; // <-- Imported icons
 
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
 
@@ -18,12 +18,17 @@ function AllQuestions() {
   const [mappingLoading, setMappingLoading] = useState(false);
   const [mappingError, setMappingError] = useState(false);
 
+  // New state for mobile menu toggling
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
   const navigate = useNavigate();
   const location = useLocation();
   const classroom_id = location.state?.classroom_id;
 
   const navItems = [];
-  const actionButton = { label: "Logout", path: "/logout" };
 
   useEffect(() => {
     if (!classroom_id) {
@@ -180,43 +185,81 @@ function AllQuestions() {
   };
 
   return (
-    <div>
+    <div className="flex flex-col bg-white min-h-screen overflow-x-hidden">
       <Navbar navItems={navItems} logout={true} />
+      <div className="h-16"></div>
 
-      <div className="container mx-auto px-6 mt-24">
-        <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col ml-2 mr-2 md:mx-20 px-6 mt-8 ">
+        <div className="flex items-center justify-between mb-6 ">
           {/* Title with fixed width */}
-          <h1 className="text-xl font-bold w-1/4">All Questions</h1>
+          <h1 className="text-xl font-semibold font-inter tracking-[-0.04em] w-1/2 lg:w-1/4">
+            All Questions
+          </h1>
 
-          {/* Buttons wrapper */}
-          <div className="flex gap-x-4">
+          {/* Desktop inline buttons (visible on large screens) */}
+          <div className="hidden lg:flex gap-x-4">
             <button
               onClick={handleAddQuestion}
               disabled={loading}
-              className={`bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] ${
-                loading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className="bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Add a New Question
             </button>
             <button
               onClick={() => handleTemplateFileDownload("docx")}
               disabled={loading}
-              className={`bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] ${
-                loading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className="bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Download DOCX Template
             </button>
             <button
               onClick={() => handleTemplateFileDownload("zip")}
               disabled={loading}
-              className={`bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] ${
-                loading ? "opacity-50 cursor-not-allowed" : ""
-              }`}
+              className="bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Download Latex Template
             </button>
+          </div>
+
+          {/* Mobile hamburger menu (visible on small and medium screens) */}
+          <div className="lg:hidden relative">
+            <button
+              onClick={toggleMobileMenu}
+              className="text-black focus:outline-none"
+            >
+              {isMobileMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+            </button>
+            {isMobileMenuOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white shadow-md rounded-md border border-gray-300 py-2 px-4 flex flex-col space-y-2">
+                <button
+                  onClick={() => {
+                    handleAddQuestion();
+                    toggleMobileMenu();
+                  }}
+                  className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
+                >
+                  Add a New Question
+                </button>
+                <button
+                  onClick={() => {
+                    handleTemplateFileDownload("docx");
+                    toggleMobileMenu();
+                  }}
+                  className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
+                >
+                  Download DOCX Template
+                </button>
+                <button
+                  onClick={() => {
+                    handleTemplateFileDownload("zip");
+                    toggleMobileMenu();
+                  }}
+                  className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
+                >
+                  Download Latex Template
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -319,7 +362,7 @@ function AllQuestions() {
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
         >
           <div className="fixed inset-0 flex items-center justify-center bg-gray-900 bg-opacity-50">
-            <div className="bg-white p-6 rounded-lg shadow-lg max-w-sm md:max-w-md">
+            <div className="bg-white rounded-lg shadow-lg w-[300px] md:max-w-lg md:w-full pl-4 py-4 pr-2 md:p-6">
               <h2 className="text-lg font-bold mb-4">Upload Your Question</h2>
               <label
                 htmlFor="question_name"
@@ -345,9 +388,30 @@ function AllQuestions() {
                 type="number"
                 placeholder="Enter Weight"
                 min={1}
+                max={100}
                 className="border p-2 w-full rounded mb-4"
                 value={weight}
-                onChange={(e) => setWeight(e.target.value)}
+                onChange={(e) => {
+                  let newVal = e.target.value.trim();
+                  if (newVal === "") {
+                    setWeight(newVal);
+                    return;
+                  }
+                  newVal = parseFloat(newVal);
+                  if (isNaN(newVal) || newVal < 1) {
+                    newVal = 1;
+                  }
+                  if(newVal>100){
+                    newVal = 100
+                  }
+                  setWeight(newVal);
+                }}
+                onBlur={(e) => {
+                  let newVal = e.target.value.trim();
+                  if (newVal === "" || isNaN(parseFloat(newVal))) {
+                    setWeight(1);
+                  }
+                }}
               />
               <label
                 htmlFor="pdf_file"

@@ -402,7 +402,7 @@ function QuestionReport() {
     viewReportType === "student" || viewReportType === "average";
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-white flex flex-col overflow-x-hidden">
       {/* Navbar */}
       <Navbar
         navItems={navItems} 
@@ -412,7 +412,7 @@ function QuestionReport() {
 
       <AnimatePresence mode="wait">
         {studentsLoading ? (
-          <div className="container mx-auto px-6 mt-24">
+          <div className="container mx-auto px-6 mt-8">
             <div className="bg-white shadow-md rounded-lg p-6">
               <motion.div
                 className="animate-pulse"
@@ -440,7 +440,7 @@ function QuestionReport() {
           >
             <div className="flex justify-between items-center my-4 mx-4 p-4 bg-white rounded-md shadow-md">
               {/* Left Form Section */}
-              <div className="w-1/2 flex flex-col">
+              <div className="w-full lg:w-1/2 flex flex-col">
                 <p className="font-inter font-semibold text-[24px] leading-[100%] tracking-[-0.04em] mb-2">
                   {question_name} Report
                 </p>
@@ -492,7 +492,7 @@ function QuestionReport() {
                 )}
               </div>
               {/* Right Image Section */}
-              <div className="w-1/2 h-full px-4 py-4 flex items-center justify-center">
+              <div className="hidden lg:flex lg:w-1/2 h-full px-4 py-4 items-center justify-center">
                 <img
                   src={`${process.env.PUBLIC_URL}/assets/classImage.png`}
                   alt="Image Here"
@@ -507,7 +507,7 @@ function QuestionReport() {
 
       {/* Report Display Card */}
       {loading && (
-        <div className="flex justify-center mt-4 mb-4">
+        <div className="flex justify-center items-center mt-4 mb-4">
           <svg
             className="animate-spin h-5 w-5 text-blue-500"
             xmlns="http://www.w3.org/2000/svg"
@@ -574,8 +574,8 @@ function QuestionReport() {
                   <p className="text-black">{reportData.summary}</p>
                 </div>
               )}
-              <div className="w-full flex flex-wrap items-stretch justify-center mb-4">
-                <div className="w-1/2 flex flex-col px-4">
+              <div className="w-full flex flex-col lg:flex-row items-stretch justify-center gap-4 mb-4">
+                <div className="w-full lg:w-1/2 flex flex-col pr-1 pl-1 lg:px-6">
                   <h3 className="text-lg font-bold text-center mb-2">
                     PO Grades
                   </h3>
@@ -583,10 +583,10 @@ function QuestionReport() {
                     <table className="w-full border border-gray-200 h-full">
                       <thead className="bg-black text-white">
                         <tr>
-                          <th className="px-4 py-2 border border-gray-200 text-center">
+                          <th className="w-1/2 px-4 py-2 border border-gray-200 text-center">
                             PO
                           </th>
-                          <th className="px-4 py-2 border border-gray-200 text-center">
+                          <th className="w-1/2 px-4 py-2 border border-gray-200 text-center">
                             Grade (%)
                           </th>
                         </tr>
@@ -608,7 +608,7 @@ function QuestionReport() {
                     </table>
                   </div>
                 </div>
-                <div className="w-1/2 flex flex-col px-4">
+                <div className="w-full lg:w-1/2 flex flex-col pr-1 pl-1 lg:px-6">
                   <h3 className="text-lg font-bold text-center mb-2">
                     Cognitive Grades
                   </h3>
@@ -616,10 +616,10 @@ function QuestionReport() {
                     <table className="w-full border border-gray-200 h-full">
                       <thead className="bg-black text-white">
                         <tr>
-                          <th className="px-4 py-2 border border-gray-200 text-center">
+                          <th className="w-1/2 px-4 py-2 border border-gray-200 text-center">
                             Category
                           </th>
-                          <th className="px-4 py-2 border border-gray-200 text-center">
+                          <th className="w-1/2 px-4 py-2 border border-gray-200 text-center">
                             Grade (%)
                           </th>
                         </tr>
@@ -642,8 +642,8 @@ function QuestionReport() {
                   </div>
                 </div>
               </div>
-              <div className="w-full flex flex-wrap items-center justify-center mb-4">
-                <div className="w-1/2 flex flex-col px-4">
+              <div className="w-full flex flex-col lg:flex-row items-center justify-center mb-4">
+                <div className="w-full lg:w-1/2 flex flex-col pr-1 pl-1 lg:px-6">
                   <BarChart
                     ref={poChartRef}
                     title="PO Grades"
@@ -651,7 +651,7 @@ function QuestionReport() {
                     data={reportData.grades.po_grades || {}}
                   />
                 </div>
-                <div className="w-1/2 flex flex-col px-4">
+                <div className="w-full lg:w-1/2 flex flex-col pr-1 pl-1 lg:px-6">
                   <BarChart
                     ref={cogChartRef}
                     title="Cognitive Grades"
@@ -677,7 +677,7 @@ function QuestionReport() {
                   return (
                     <div className="w-full overflow-x-auto overflow-y-auto max-h-96">
                       <table className="min-w-full border border-gray-200">
-                        <thead className="bg-gray-100">
+                        <thead className="bg-black text-white font-inter font-semibold tracking-[-0.04em]">
                           <tr>
                             <th
                               rowSpan={2}

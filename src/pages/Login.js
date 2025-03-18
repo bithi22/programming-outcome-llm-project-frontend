@@ -126,7 +126,7 @@ function Login() {
           {/* Login Card */}
           <div className="flex flex-col bg-white shadow-lg rounded-xl p-8 w-11/12 max-w-sm md:max-w-md my-4 z-20">
             <h2 className="text-2xl font-bold mb-2 text-left">
-              Welcome back to OBE<span className="text-blue-500">lytics</span>
+              Welcome back to <span className="font-serif font-bold">OBE<span className="text-blue-500">lytics</span></span>
             </h2>
             <p className="text-black mb-2 text-left">
               A single source platform for Outcome Based Education

@@ -14,11 +14,9 @@ function Navbar({ navItems, actionButton, buttonStyle, logout }) {
     <nav className="bg-white py-3 px-6 shadow-md fixed top-0 left-0 w-full z-50">
       <div className="flex items-center justify-between">
         {/* Logo */}
-        <div>
-          <Link
-            to="/"
-            className="text-3xl font-serif font-bold no-underline md:px-20"
-          >
+        <div className="flex items-center">
+          <Link to="/" className="flex items-center text-3xl font-serif font-bold no-underline md:px-20">
+            <img src="/favicon.ico" alt="Logo" className="h-8 w-8 mr-2 rounded-full" />
             <span className="text-black">OBE</span>
             <span className="text-blue-500">lytics</span>
           </Link>

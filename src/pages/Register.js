@@ -148,7 +148,7 @@ function Register() {
         {/* Card container with margin-top to maintain spacing */}
         <div className="flex flex-col bg-white shadow-lg rounded-xl p-8 w-11/12 max-w-sm md:max-w-md mt-4 mb-4 z-20">
           <h2 className="text-2xl font-bold mb-2 text-left">
-            Register to OBE<span className="text-blue-500">lytics</span>
+            Register to <span className="font-serif font-bold">OBE<span className="text-blue-500">lytics</span></span>
           </h2>
           <p className="text-black mb-2 text-left">
             Register to automate Outcome Based Education.

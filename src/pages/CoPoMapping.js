@@ -22,8 +22,6 @@ function CoPoMapping() {
   const navigate = useNavigate();
 
   const navItems = [
-    { label: "Join Class", path: "/joinclass" },
-    { label: "Generate Report", path: "/generatereport" },
   ];
 
   const actionButton = { label: "Logout", path: "/logout" };
@@ -145,10 +143,12 @@ function CoPoMapping() {
         }, 1500);
         // Show success popup for 3 seconds, then navigate
         setTimeout(() => {
+          window.history.replaceState(null, "", "/classroom"); // Clear forward history
           navigate("/classroom", {
             state: {
               classroom_id,
             },
+            replace : true
           });
         }, 3000);
       } else {
@@ -166,13 +166,14 @@ function CoPoMapping() {
   };
 
   return (
-    <div>
+    <div className="flex flex-col bg-white min-h-screen">
       <Navbar navItems={navItems} logout={true} />
+      <div className="h-16"></div>
       {/* Loading Overlay */}
       {isLoading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-500 bg-opacity-50">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#2C36CC]"></div>
-          <span className="ml-2 text-black">Please wait...</span>
+          <span className="ml-2 font-inter font-bold text-lg text-white">Please wait...</span>
         </div>
       )}
 
@@ -201,7 +202,7 @@ function CoPoMapping() {
         </div>
       )}
 
-      <div className="container mx-auto px-6 mt-24 mb-6">
+      <div className="container mx-auto px-6 mt-8 mb-6">
         {/* CO-PO Table Header + Buttons */}
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold">CO-PO Table</h2>
@@ -235,12 +236,12 @@ function CoPoMapping() {
           <table className="table-auto w-full text-left border border-gray-300">
             <thead className="bg-black text-white">
               <tr>
-                <th className="px-4 py-2 border w-32">CO</th>
-                <th className="px-4 py-2 border w-1/2">Description</th>
-                <th className="px-4 py-2 border w-60">Cognitive Domains</th>
-                <th className="px-4 py-2 border w-40">PO's</th>
-                <th className="px-4 py-2 border w-24">Weight</th>
-                <th className="px-4 py-2 border w-24">Actions</th>
+                <th className="px-4 py-2 border w-32 text-center">CO</th>
+                <th className="px-4 py-2 border w-1/2 text-center">Description</th>
+                <th className="px-4 py-2 border w-60 text-center">Cognitive Domain</th>
+                <th className="px-4 py-2 border w-60 text-center">PO</th>
+                <th className="px-4 py-2 border w-24 text-center">Weight</th>
+                <th className="px-4 py-2 border w-24 text-center">Action</th>
               </tr>
             </thead>
             <tbody>
@@ -253,7 +254,7 @@ function CoPoMapping() {
                   return (
                     <tr key={index}>
                       {/* CO column */}
-                      <td className="px-4 py-2 border">
+                      <td className="pr-1 pl-1 py-2 lg:px-6 border text-center">
                         <input
                           type="text"
                           className="w-full border px-2 py-1"
@@ -272,7 +273,7 @@ function CoPoMapping() {
                       </td>
 
                       {/* Description column */}
-                      <td className="px-4 py-2 border">
+                      <td className="pr-1 pl-1 py-2 lg:px-6 border">
                         <textarea
                           rows={4}
                           className="w-full border px-2 py-1"
@@ -291,7 +292,7 @@ function CoPoMapping() {
                       </td>
 
                       {/* Cognitive Domain column */}
-                      <td className="px-4 py-2 border">
+                      <td className="pr-1 pl-1 py-2 lg:px-6 border text-center">
                         <select
                           className="w-full border px-2 py-1"
                           value={domain}
@@ -316,7 +317,7 @@ function CoPoMapping() {
                       </td>
 
                       {/* PO column */}
-                      <td className="px-4 py-2 border">
+                      <td className="pr-1 pl-1 py-2 lg:px-6 border text-center">
                         <select
                           className="w-full border px-2 py-1"
                           value={po}
@@ -343,7 +344,7 @@ function CoPoMapping() {
                       </td>
 
                       {/* Weight column */}
-                      <td className="px-2 py-2 border">
+                      <td className="pr-1 pl-1 py-2 lg:px-6 border text-center">
                         <input
                           type="number"
                           min="1"
@@ -390,7 +391,7 @@ function CoPoMapping() {
                       </td>
 
                       {/* Actions column */}
-                      <td className="px-4 py-2 border">
+                      <td className="pr-1 pl-1 py-2 lg:px-6 border text-center">
                         <button
                           onClick={() => handleDeleteRow(key)}
                           className="bg-red-500 text-white py-1 px-2 rounded-md hover:bg-red-600"

@@ -278,9 +278,9 @@ function Dashboard() {
                 {classes.map((classItem) => (
                   <ClassCard
                     key={classItem._id}
-                    title={classItem.name}
-                    year={classItem.course}
-                    semester={classItem.course_code}
+                    name={classItem.name}
+                    course={classItem.course}
+                    course_code={classItem.course_code}
                     image={process.env.PUBLIC_URL + "/assets/classImage.png"}
                     onClick={() => handleViewClass(classItem._id)}
                   />

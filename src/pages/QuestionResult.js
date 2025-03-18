@@ -579,6 +579,83 @@ function QuestionResult() {
 
       const fileData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
       const headerRowCount = headers.length || 0;
+
+      // Build expected header matrix (as generated in your downloadXLSX function)
+      const expectedHeader = Array.from({ length: headerRowCount }, () =>
+        Array(totalColumns + 1).fill("")
+      );
+      headers.forEach((row, rowIndex) => {
+        let colIndex = 0;
+        row.forEach((cell) => {
+          while (expectedHeader[rowIndex][colIndex] !== "") {
+            colIndex++;
+          }
+          expectedHeader[rowIndex][colIndex] = cell.label;
+          const colSpan = cell.colSpan || 1;
+          const rowSpan = cell.rowSpan || 1;
+          if (colSpan > 1 || rowSpan > 1) {
+            for (let i = rowIndex; i < rowIndex + rowSpan; i++) {
+              for (let j = colIndex; j < colIndex + colSpan; j++) {
+                if (i === rowIndex && j === colIndex) continue;
+                expectedHeader[i][j] = null;
+              }
+            }
+          }
+          colIndex += colSpan;
+        });
+        // Add the Total Marks header in the first row
+        if (rowIndex === 0) {
+          while (expectedHeader[rowIndex][colIndex] !== "") {
+            colIndex++;
+          }
+          expectedHeader[rowIndex][colIndex] = `Total Marks (${totalMarks})`;
+        }
+      });
+
+      console.log(expectedHeader)
+
+      // Extract header rows from the uploaded file
+      const uploadedHeader = fileData.slice(0, headerRowCount);
+      console.log(uploadedHeader)
+
+      // Compare the expected header with the uploaded header
+      let headersMatch = true;
+      for (let i = 0; i < headerRowCount; i++) {
+        const expectedRow = expectedHeader[i];
+        const uploadedRow = uploadedHeader[i] || [];
+        if (expectedRow.length !== uploadedRow.length) {
+          for(let j=expectedRow.length-1;j>uploadedRow.length-1;j--){
+            if(expectedRow[j]==='' || expectedRow[j]===null){
+              continue
+            }
+            else{
+              headersMatch = false;
+              break;
+            }
+          }
+        }
+
+        for (let j = 0; j < uploadedRow.length; j++) {
+          const expectedCell = expectedRow[j] === null ? "" : expectedRow[j];
+          const uploadedCell = uploadedRow[j] == null ? "" : uploadedRow[j];
+          if (expectedCell !== uploadedCell) {
+            headersMatch = false;
+            break;
+          }
+        }
+        
+        if (!headersMatch) break;
+      }
+
+      if (!headersMatch) {
+        setError("Please use the downloaded template file.");
+        setTimeout(()=>{
+          setError('')
+        },3000)
+        return;
+      }
+
+      // Process data rows if headers match
       const dataRows = fileData.slice(headerRowCount);
       const filteredRows = dataRows.filter(
         (row) => row[0] !== undefined && row[0] !== null && row[0] !== ""
@@ -597,11 +674,9 @@ function QuestionResult() {
               newRow[i] = "";
             } else {
               let numValue = Number(cellValue);
-              // If negative, set to 0.
               if (numValue < 0) {
                 numValue = 0;
               }
-              // Cap value to allowed marks if it exceeds max.
               const allowedMax = maxMarksArray[i - 1];
               if (allowedMax !== undefined && numValue > allowedMax) {
                 numValue = allowedMax;
@@ -895,7 +970,9 @@ function QuestionResult() {
             </div>
           </div>
         )}
-
+        {error && (
+          <p className="text-red-500 mb-4 text-center font-bold">{error}</p>
+        )}
         <div className="overflow-y-auto max-h-[500px] border border-gray-300">
           <table className="table-auto w-full border-collapse border border-gray-300">
             <thead className="">

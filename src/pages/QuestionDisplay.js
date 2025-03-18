@@ -396,6 +396,7 @@ function QuestionDisplay() {
     } catch (error) {
       setTimeout(() => {
         setIsEditing(false);
+        setLoadingUpdate(false);
         setLoadingUpdateError(error.response?.data?.message);
       }, 1500);
     }

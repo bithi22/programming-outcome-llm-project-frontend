@@ -52,7 +52,7 @@ function Dashboard() {
           headers: { accessToken: token },
         }
       );
-      setClasses(response.data.data || []);
+      setClasses(response.data.data.reverse() || []);
     } catch (error) {
       setError("Failed to fetch classes. Please try again.");
     } finally {

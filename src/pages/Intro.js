@@ -16,7 +16,7 @@ const features = [
     title: "Real-time Analytics",
     description:
       "Provides deep insights into student performance and outcomes.",
-    image: "/assets/student.jpg",
+    image: "/assets/male1.jpg",
   },
   {
     title: "Personalized Learning",

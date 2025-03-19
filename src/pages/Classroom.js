@@ -152,7 +152,10 @@ function Classroom() {
   // but store "co_label" inside each object so the user can rename it.
   const handleEditTable = () => {
     if (!classroomDetails?.co_po_table) {
-      alert("No CO-PO data available to edit.");
+      setError("No CO-PO data available to edit.");
+      setTimeout(() => {
+        setError("");
+      }, 3000);
       return;
     }
     const tempTable = {};
@@ -463,20 +466,23 @@ function Classroom() {
                     <div className="flex items-center justify-end">
                       {/* Desktop version */}
                       <div className="hidden lg:flex space-x-4">
-                        <button
-                          onClick={handleReportsClick}
-                          className="bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] hover:bg-[#2C36CC]"
-                        >
-                          Classroom Reports
-                        </button>
-                        {classroomDetails?.teacher_access && (
+                        {classroomDetails?.co_po_table && (
                           <button
-                            onClick={handleQuestionClick}
+                            onClick={handleReportsClick}
                             className="bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] hover:bg-[#2C36CC]"
                           >
-                            Questions
+                            Classroom Reports
                           </button>
                         )}
+                        {classroomDetails?.teacher_access &&
+                          classroomDetails?.co_po_table && (
+                            <button
+                              onClick={handleQuestionClick}
+                              className="bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] hover:bg-[#2C36CC]"
+                            >
+                              Questions
+                            </button>
+                          )}
                         {classroomDetails?.committee_access && (
                           <button
                             onClick={() => setIsSyllabusModalOpen(true)}
@@ -500,26 +506,30 @@ function Classroom() {
                         </button>
                         {isActionMenuOpen && (
                           <div className="absolute right-0 mt-6 w-48 bg-white shadow-md rounded-md border border-gray-300 py-2 px-4 flex flex-col space-y-2 z-50">
-                            <button
-                              onClick={() => {
-                                setIsActionMenuOpen(false);
-                                handleReportsClick();
-                              }}
-                              className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
-                            >
-                              Classroom Reports
-                            </button>
-                            {classroomDetails?.teacher_access && (
+                            {classroomDetails?.co_po_table && (
                               <button
                                 onClick={() => {
                                   setIsActionMenuOpen(false);
-                                  handleQuestionClick();
+                                  handleReportsClick();
                                 }}
                                 className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
                               >
-                                Questions
+                                Classroom Reports
                               </button>
                             )}
+
+                            {classroomDetails?.teacher_access &&
+                              classroomDetails?.co_po_table && (
+                                <button
+                                  onClick={() => {
+                                    setIsActionMenuOpen(false);
+                                    handleQuestionClick();
+                                  }}
+                                  className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
+                                >
+                                  Questions
+                                </button>
+                              )}
                             {classroomDetails?.committee_access && (
                               <button
                                 onClick={() => {
@@ -574,6 +584,7 @@ function Classroom() {
                         </div>
                       )}
                       {classroomDetails?.committee_access &&
+                        classroomDetails?.co_po_table &&
                         !isEditingTable && (
                           <button
                             onClick={handleEditTable}
@@ -582,128 +593,133 @@ function Classroom() {
                             Edit Table
                           </button>
                         )}
-                      {isEditingTable && classroomDetails?.committee_access && (
-                        <>
-                          <button
-                            onClick={handleAddRow}
-                            disabled={isLoading}
-                            className={`bg-green-700 text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] hover:bg-green-800 ${
-                              isLoading ? "opacity-50 cursor-not-allowed" : ""
-                            }`}
-                          >
-                            Add CO
-                          </button>
-                          <button
-                            onClick={handleSaveChanges}
-                            disabled={isLoading}
-                            className={`bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] hover:bg-[#2C36CC] ${
-                              isLoading ? "opacity-50 cursor-not-allowed" : ""
-                            }`}
-                          >
-                            Save Changes
-                          </button>
-                          <button
-                            onClick={handleCancelEdit}
-                            disabled={isLoading}
-                            className={`bg-gray-300 text-black py-2 px-4 rounded-md font-inter font-semibold text-[16px] hover:bg-gray-400 ${
-                              isLoading ? "opacity-50 cursor-not-allowed" : ""
-                            }`}
-                          >
-                            Cancel
-                          </button>
-                        </>
-                      )}
+                      {isEditingTable &&
+                        classroomDetails?.committee_access &&
+                        classroomDetails?.co_po_table && (
+                          <>
+                            <button
+                              onClick={handleAddRow}
+                              disabled={isLoading}
+                              className={`bg-green-700 text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] hover:bg-green-800 ${
+                                isLoading ? "opacity-50 cursor-not-allowed" : ""
+                              }`}
+                            >
+                              Add CO
+                            </button>
+                            <button
+                              onClick={handleSaveChanges}
+                              disabled={isLoading}
+                              className={`bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] hover:bg-[#2C36CC] ${
+                                isLoading ? "opacity-50 cursor-not-allowed" : ""
+                              }`}
+                            >
+                              Save Changes
+                            </button>
+                            <button
+                              onClick={handleCancelEdit}
+                              disabled={isLoading}
+                              className={`bg-gray-300 text-black py-2 px-4 rounded-md font-inter font-semibold text-[16px] hover:bg-gray-400 ${
+                                isLoading ? "opacity-50 cursor-not-allowed" : ""
+                              }`}
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        )}
                     </div>
                     {/* Mobile table actions */}
-                    <div className="flex lg:hidden relative">
-                      <button
-                        onClick={() =>
-                          setIsTableActionMenuOpen(!isTableActionMenuOpen)
-                        }
-                        className="text-black focus:outline-none"
-                      >
-                        {isTableActionMenuOpen ? (
-                          <FaTimes size={24} />
-                        ) : (
-                          <FaBars size={24} />
-                        )}
-                      </button>
-                      {isTableActionMenuOpen && (
-                        <div className="absolute right-0 mt-6 w-48 bg-white shadow-md rounded-md border border-gray-300 py-2 px-4 flex flex-col space-y-2">
-                          {isLoading && (
-                            <div className="flex items-center py-2">
-                              <svg
-                                className="animate-spin h-5 w-5 text-blue-500"
-                                xmlns="http://www.w3.org/2000/svg"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                              >
-                                <circle
-                                  className="opacity-25"
-                                  cx="12"
-                                  cy="12"
-                                  r="10"
-                                  stroke="currentColor"
-                                  strokeWidth="4"
-                                ></circle>
-                                <path
-                                  className="opacity-75"
-                                  fill="currentColor"
-                                  d="M4 12a8 8 0 018-8v8H4z"
-                                ></path>
-                              </svg>
-                              <span className="mx-2 text-sm">
-                                Please wait...
-                              </span>
-                            </div>
+
+                    {classroomDetails?.co_po_table && (
+                      <div className="flex lg:hidden relative">
+                        <button
+                          onClick={() =>
+                            setIsTableActionMenuOpen(!isTableActionMenuOpen)
+                          }
+                          className="text-black focus:outline-none"
+                        >
+                          {isTableActionMenuOpen ? (
+                            <FaTimes size={24} />
+                          ) : (
+                            <FaBars size={24} />
                           )}
-                          {classroomDetails?.committee_access &&
-                            !isEditingTable && (
-                              <button
-                                onClick={() => {
-                                  setIsTableActionMenuOpen(false);
-                                  handleEditTable();
-                                }}
-                                className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
-                              >
-                                Edit Table
-                              </button>
+                        </button>
+                        {isTableActionMenuOpen && (
+                          <div className="absolute right-0 mt-6 w-48 bg-white shadow-md rounded-md border border-gray-300 py-2 px-4 flex flex-col space-y-2">
+                            {isLoading && (
+                              <div className="flex items-center py-2">
+                                <svg
+                                  className="animate-spin h-5 w-5 text-blue-500"
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  fill="none"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <circle
+                                    className="opacity-25"
+                                    cx="12"
+                                    cy="12"
+                                    r="10"
+                                    stroke="currentColor"
+                                    strokeWidth="4"
+                                  ></circle>
+                                  <path
+                                    className="opacity-75"
+                                    fill="currentColor"
+                                    d="M4 12a8 8 0 018-8v8H4z"
+                                  ></path>
+                                </svg>
+                                <span className="mx-2 text-sm">
+                                  Please wait...
+                                </span>
+                              </div>
                             )}
-                          {isEditingTable &&
-                            classroomDetails?.committee_access && (
-                              <>
+                            {classroomDetails?.committee_access &&
+                              !isEditingTable && (
                                 <button
                                   onClick={() => {
                                     setIsTableActionMenuOpen(false);
-                                    handleAddRow();
+                                    handleEditTable();
                                   }}
                                   className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
                                 >
-                                  Add CO
+                                  Edit Table
                                 </button>
-                                <button
-                                  onClick={() => {
-                                    setIsTableActionMenuOpen(false);
-                                    handleSaveChanges();
-                                  }}
-                                  className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
-                                >
-                                  Save Changes
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setIsTableActionMenuOpen(false);
-                                    handleCancelEdit();
-                                  }}
-                                  className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
-                                >
-                                  Cancel
-                                </button>
-                              </>
-                            )}
-                        </div>
-                      )}
-                    </div>
+                              )}
+                            {isEditingTable &&
+                              classroomDetails?.committee_access && (
+                                <>
+                                  <button
+                                    onClick={() => {
+                                      setIsTableActionMenuOpen(false);
+                                      handleAddRow();
+                                    }}
+                                    className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
+                                  >
+                                    Add CO
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setIsTableActionMenuOpen(false);
+                                      handleSaveChanges();
+                                    }}
+                                    className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
+                                  >
+                                    Save Changes
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setIsTableActionMenuOpen(false);
+                                      handleCancelEdit();
+                                    }}
+                                    className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
+                                  >
+                                    Cancel
+                                  </button>
+                                </>
+                              )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                   {isEditingTable && coPoEditError && (
                     <div className="text-red-500 text-sm mb-4">
@@ -928,7 +944,7 @@ function Classroom() {
                               className="px-4 py-2 border text-center"
                               colSpan={isEditingTable ? 6 : 5}
                             >
-                              No CO-PO data available.
+                              No CO-PO data available. Please upload the syllabus to get started.
                             </td>
                           </tr>
                         )}

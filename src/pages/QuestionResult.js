@@ -106,7 +106,10 @@ function QuestionResult() {
         const num = parseFloat(row[i]);
         total += isNaN(num) ? 0 : num;
       }
-      return [...row, total];
+
+      // Limit the total to two decimal places.
+      const roundedTotal = Number(total.toFixed(2));
+      return [...row, roundedTotal];
     });
 
     const sheetData = [...headerMatrix, ...finalData];
@@ -222,7 +225,7 @@ function QuestionResult() {
     }
     setTotalColumns(t_columns);
     setGlobalMaxRow(maxRow);
-    setTotalMarks(t_marks);
+    setTotalMarks(Math.round(t_marks * 100) / 100); // Returns 5.68);
 
     // Compute an array of maximum marks for each marks cell (skipping Student ID).
     const getMaxMarksArray = (mapping) => {
@@ -612,11 +615,11 @@ function QuestionResult() {
         }
       });
 
-      console.log(expectedHeader)
+      console.log(expectedHeader);
 
       // Extract header rows from the uploaded file
       const uploadedHeader = fileData.slice(0, headerRowCount);
-      console.log(uploadedHeader)
+      console.log(uploadedHeader);
 
       // Compare the expected header with the uploaded header
       let headersMatch = true;
@@ -624,11 +627,14 @@ function QuestionResult() {
         const expectedRow = expectedHeader[i];
         const uploadedRow = uploadedHeader[i] || [];
         if (expectedRow.length !== uploadedRow.length) {
-          for(let j=expectedRow.length-1;j>uploadedRow.length-1;j--){
-            if(expectedRow[j]==='' || expectedRow[j]===null){
-              continue
-            }
-            else{
+          for (
+            let j = expectedRow.length - 1;
+            j > uploadedRow.length - 1;
+            j--
+          ) {
+            if (expectedRow[j] === "" || expectedRow[j] === null) {
+              continue;
+            } else {
               headersMatch = false;
               break;
             }
@@ -643,15 +649,15 @@ function QuestionResult() {
             break;
           }
         }
-        
+
         if (!headersMatch) break;
       }
 
       if (!headersMatch) {
         setError("Please use the downloaded template file.");
-        setTimeout(()=>{
-          setError('')
-        },3000)
+        setTimeout(() => {
+          setError("");
+        }, 3000);
         return;
       }
 
@@ -1038,7 +1044,7 @@ function QuestionResult() {
                       </td>
                     ))}
                     <td className="border border-gray-300 px-4 py-2 text-center bg-white text-black text-center">
-                      {total}
+                      {Number(total.toFixed(2))}
                     </td>
                     <td className="border border-gray-300 px-4 py-2 text-center bg-white text-black text-center">
                       <button onClick={() => deleteRow(startIndex + rowIndex)}>

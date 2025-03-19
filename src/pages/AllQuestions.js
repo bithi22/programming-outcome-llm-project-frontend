@@ -133,6 +133,7 @@ function AllQuestions() {
   };
 
   const handleGetCoPoMapping = async () => {
+    setMappingError('')
     if (!questionName || !weight || !file) {
       setMappingError("Please fill in all the fields.");
       return;
@@ -178,7 +179,7 @@ function AllQuestions() {
       }
     } catch (error) {
       setTimeout(() => {
-        setMappingError(error.response?.data?.message);
+        setMappingError(error.response?.data?.message || "Some error occured. Please try again.");
         setMappingLoading(false);
       }, 1500);
     }

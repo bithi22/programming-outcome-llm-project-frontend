@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { FaBars, FaTimes } from "react-icons/fa";
 import LogoutButton from "./LogoutButton";
 
+const API_URL = process.env.REACT_APP_API_URL
 function Navbar({ navItems, actionButton, buttonStyle, logout }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 

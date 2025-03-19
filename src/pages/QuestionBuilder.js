@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 
+const API_URL = process.env.REACT_APP_API_URL
+
+
 function QuestionBuilder() {
   const [questions, setQuestions] = useState([]);
   const [popup, setPopup] = useState({

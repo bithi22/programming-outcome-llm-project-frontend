@@ -4,6 +4,7 @@ import Navbar from "../components/Navbar";
 import axios from "axios";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
+const API_URL = process.env.REACT_APP_API_URL;
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
 
 function ForgetPassword() {
@@ -24,13 +25,12 @@ function ForgetPassword() {
   const [step, setStep] = useState("getToken");
   const navigate = useNavigate();
 
-  // useEffect(()=>{
-  //     const token = localStorage.getItem('accessToken');
-  //         if (token) {
-  //           navigate("/dashboard")
-  //         }
-
-  //   },[])
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      navigate("/dashboard");
+    }
+  }, []);
 
   // First step: request a verification token by providing the email
   const handleGetToken = async (e) => {
@@ -48,7 +48,7 @@ function ForgetPassword() {
     try {
       // Call your API to get the verification token
       const response = await axios.post(
-        "http://localhost:8000/auth/forget_password/initiate",
+        `${API_URL}/auth/forget_password/initiate`,
         { email }
       );
       if (response.status === 200) {
@@ -104,7 +104,7 @@ function ForgetPassword() {
     try {
       // Call your API to set the new password
       const response = await axios.put(
-        "http://localhost:8000/auth/forget_password/confirm",
+        `${API_URL}/auth/forget_password/confirm`,
         { email, password: newPassword, token }
       );
       if (response.status === 200) {

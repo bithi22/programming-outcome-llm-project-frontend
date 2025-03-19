@@ -5,6 +5,8 @@ import Navbar from "../components/Navbar";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaBars, FaTimes } from "react-icons/fa";
 
+const API_URL = process.env.REACT_APP_API_URL
+
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
 
 function QuestionDisplay() {
@@ -57,7 +59,7 @@ function QuestionDisplay() {
         }
 
         const response = await axios.get(
-          `http://localhost:8000/question/${question_id}`,
+          `${API_URL}/question/${question_id}`,
           {
             headers: {
               accessToken: token,
@@ -376,7 +378,7 @@ function QuestionDisplay() {
         question_id: question_id,
       };
       const response = await axios.put(
-        "http://localhost:8000/question/update-co-po-mapping",
+        `${API_URL}/question/update-co-po-mapping`,
         payload,
         {
           headers: { accessToken: token },

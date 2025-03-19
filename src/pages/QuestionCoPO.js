@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Navbar from "../components/Navbar";
 
+const API_URL = process.env.REACT_APP_API_URL
+
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
 
 function QuestionCoPo() {
@@ -318,7 +320,7 @@ function QuestionCoPo() {
       setIsLoading(true);
       // Make your POST request (update the URL as per your backend)
       const response = await axios.post(
-        `http://localhost:8000/question`,
+        `${API_URL}/question`,
         payload,
         {
           headers: {

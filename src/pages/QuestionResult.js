@@ -6,6 +6,7 @@ import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { FaBars, FaTimes } from "react-icons/fa";
 
+const API_URL = process.env.REACT_APP_API_URL
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
 
 function QuestionResult() {
@@ -477,7 +478,7 @@ function QuestionResult() {
     try {
       setIsLoading(true);
       const response = await axios.put(
-        `http://localhost:8000/question/current-record`,
+        `${API_URL}/question/current-record`,
         requestBody,
         {
           headers: {
@@ -526,7 +527,7 @@ function QuestionResult() {
     setIsLoading(true);
     try {
       const response = await axios.put(
-        `http://localhost:8000/report/publish`,
+        `${API_URL}/report/publish`,
         {
           question_id,
           current_record: obtained_marks_mapping,

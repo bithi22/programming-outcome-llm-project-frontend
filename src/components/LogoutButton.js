@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import axios from "axios";
 
+const API_URL = process.env.REACT_APP_API_URL
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
 
 const LogoutButton = () => {
@@ -20,7 +21,7 @@ const LogoutButton = () => {
     try {
       // Send logout request
       await axios.post(
-        "http://localhost:8000/auth/logout",
+        `${API_URL}/auth/logout`,
         {},
         {
           headers: { accessToken: token },

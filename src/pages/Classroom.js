@@ -6,6 +6,7 @@ import { FiCopy } from "react-icons/fi";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 
+const API_URL = process.env.REACT_APP_API_URL
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
 
 function Classroom() {
@@ -77,7 +78,7 @@ function Classroom() {
         return;
       }
       const response = await axios.get(
-        `http://localhost:8000/classroom/${id}`,
+        `${API_URL}/classroom/${id}`,
         {
           headers: {
             accessToken: token,
@@ -107,7 +108,7 @@ function Classroom() {
         return;
       }
       const response = await axios.post(
-        "http://localhost:8000/classroom/co-po-mapping",
+        `${API_URL}/classroom/co-po-mapping`,
         { classroom_id, syllabus: syllabusText },
         {
           headers: {
@@ -271,7 +272,7 @@ function Classroom() {
         return;
       }
       const response = await axios.put(
-        "http://localhost:8000/classroom/co-po-mapping",
+        `${API_URL}/classroom/co-po-mapping`,
         {
           classroom_id,
           co_po_table: finalTable,

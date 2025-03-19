@@ -3,6 +3,7 @@ import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
+const API_URL = process.env.REACT_APP_API_URL
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
 
 function CoPoMapping() {
@@ -127,7 +128,7 @@ function CoPoMapping() {
       };
 
       const response = await axios.post(
-        `http://localhost:8000/classroom/syllabus`,
+        `${API_URL}/classroom/syllabus`,
         payload,
         {
           headers: {

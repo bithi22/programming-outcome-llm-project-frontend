@@ -8,6 +8,8 @@ import * as XLSX from "xlsx";
 import BarChart from "../components/BarChart";
 import { motion, AnimatePresence } from "framer-motion";
 
+const API_URL = process.env.REACT_APP_API_URL
+
 axios.defaults.withCredentials = true;
 
 function QuestionReport() {
@@ -50,7 +52,7 @@ function QuestionReport() {
       }
       try {
         const response = await axios.get(
-          `http://localhost:8000/question/students/${question_id}`,
+          `${API_URL}/question/students/${question_id}`,
           { headers: { accessToken: token } }
         );
         if (response.data.success) {
@@ -103,7 +105,7 @@ function QuestionReport() {
     }
     try {
       const response = await axios.get(
-        `http://localhost:8000/report/question/${question_id}/${studentId}`,
+        `${API_URL}/report/question/${question_id}/${studentId}`,
         { headers: { accessToken: token } }
       );
       if (response.data.success) {
@@ -140,7 +142,7 @@ function QuestionReport() {
     }
     try {
       const response = await axios.get(
-        `http://localhost:8000/report/question/${question_id}/average`,
+        `${API_URL}/report/question/${question_id}/average`,
         { headers: { accessToken: token } }
       );
       if (response.data.success) {
@@ -177,7 +179,7 @@ function QuestionReport() {
     }
     try {
       const response = await axios.get(
-        `http://localhost:8000/report/question/${question_id}/overall`,
+        `${API_URL}/report/question/${question_id}/overall`,
         { headers: { accessToken: token } }
       );
       if (response.data.success) {

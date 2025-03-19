@@ -5,6 +5,9 @@ import autoTable from "jspdf-autotable";
 import Navbar from "../components/Navbar";
 import BarChart from "../components/BarChart";
 
+const API_URL = process.env.REACT_APP_API_URL
+axios.defaults.withCredentials = true;
+
 function SemesterReport() {
   // Form fields
   const [studentId, setStudentId] = useState("");
@@ -53,7 +56,7 @@ function SemesterReport() {
     try {
       // POST request with start_date and end_date in the body
       const response = await axios.post(
-        `http://localhost:8000/report/overall/${studentId}`,
+        `${API_URL}/report/overall/${studentId}`,
         {
           start_date: startDate, // format: YYYY-MM-DD
           end_date: endDate,     // format: YYYY-MM-DD

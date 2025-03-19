@@ -5,6 +5,7 @@ import Navbar from "../components/Navbar";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import GoogleAuth from "../components/GoogleAuth";
 
+const API_URL = process.env.REACT_APP_API_URL
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
 
 function Register() {
@@ -45,6 +46,7 @@ function Register() {
   },[])
 
   const handleSubmit = async (e) => {
+    console.log(API_URL)
     e.preventDefault();
 
     // Reset errors on each click to reflect current field status
@@ -89,9 +91,11 @@ function Register() {
 
     setLoading(true);
     try {
+      console.log(`${API_URL}/auth/register`)
+      return
       const requestBody = { email, password };
       const response = await axios.post(
-        "http://localhost:8000/auth/register",
+        `${API_URL}/auth/register`,
         requestBody
       );
 
@@ -115,6 +119,7 @@ function Register() {
         }, 1500);
       } else {
         setTimeout(() => {
+          console.log(error)
           setGlobalError("An unexpected error occurred. Please try again.");
           setLoading(false);
         }, 1500);

@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { FaBars, FaTimes } from "react-icons/fa"; // <-- Imported icons
 
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
+const API_URL = process.env.REACT_APP_API_URL
 
 function AllQuestions() {
   const [questions, setQuestions] = useState([]);
@@ -47,10 +48,12 @@ function AllQuestions() {
         }
 
         const response = await axios.get(
-          `http://localhost:8000/classroom/questions/${classroom_id}`,
+          `${API_URL}/classroom/questions/${classroom_id}`,
           {
             headers: {
               accessToken: token,
+              'ngrok-skip-browser-warning': '69420',
+              'Content-Type': 'application/json',
             },
           }
         );
@@ -82,7 +85,7 @@ function AllQuestions() {
         return;
       }
       const response = await axios.get(
-        `http://localhost:8000/question/template`,
+        `${API_URL}/question/template`,
         {
           params: { file_type: fileType },
           responseType: "blob",
@@ -153,7 +156,7 @@ function AllQuestions() {
       formData.append("file", file);
 
       const response = await axios.post(
-        "http://localhost:8000/question/co-po-mapping",
+        `${API_URL}/question/co-po-mapping`,
         formData,
         {
           headers: {

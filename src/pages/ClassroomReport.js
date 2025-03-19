@@ -9,6 +9,7 @@ import BarChart from "../components/BarChart";
 
 import { motion, AnimatePresence } from "framer-motion";
 
+const API_URL = process.env.REACT_APP_API_URL
 axios.defaults.withCredentials = true;
 
 function ClassroomReport() {
@@ -62,7 +63,7 @@ function ClassroomReport() {
       }
       try {
         const response = await axios.get(
-          `http://localhost:8000/classroom/students/${classroom_id}`,
+          `${API_URL}/classroom/students/${classroom_id}`,
           { headers: { accessToken: token } }
         );
         if (response.data.success) {
@@ -118,7 +119,7 @@ function ClassroomReport() {
     }
     try {
       const response = await axios.get(
-        `http://localhost:8000/report/classroom/${classroom_id}/${role}/${studentId}`,
+        `${API_URL}/report/classroom/${classroom_id}/${role}/${studentId}`,
         { headers: { accessToken: token } }
       );
       if (response.data.success) {
@@ -155,7 +156,7 @@ function ClassroomReport() {
     }
     try {
       const response = await axios.get(
-        `http://localhost:8000/report/classroom/${classroom_id}/${role}/average`,
+        `${API_URL}/report/classroom/${classroom_id}/${role}/average`,
         { headers: { accessToken: token } }
       );
       if (response.data.success) {
@@ -192,7 +193,7 @@ function ClassroomReport() {
     }
     try {
       const response = await axios.get(
-        `http://localhost:8000/report/classroom/${classroom_id}/${role}/overall`,
+        `${API_URL}/report/classroom/${classroom_id}/${role}/overall`,
         { headers: { accessToken: token } }
       );
       if (response.data.success) {

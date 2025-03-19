@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 
+const API_URL = process.env.REACT_APP_API_URL
+
 const navItems = [];
 
 const features = [

@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import axios from "axios";
 
+const API_URL = process.env.REACT_APP_API_URL;
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
 
 function EmailVerification() {
@@ -15,13 +16,12 @@ function EmailVerification() {
   const [tokenError, setTokenError] = useState("");
   const navigate = useNavigate();
 
-  // useEffect(()=>{
-  //     const token = localStorage.getItem('accessToken');
-  //         if (token) {
-  //           navigate("/dashboard")
-  //         }
-
-  //   },[])
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      navigate("/dashboard");
+    }
+  }, []);
 
   const handleVerify = async (e) => {
     e.preventDefault();
@@ -34,10 +34,10 @@ function EmailVerification() {
     }
     setLoading(true);
     try {
-      const response = await axios.post(
-        "http://localhost:8000/auth/verifyEmail",
-        { email, token }
-      );
+      const response = await axios.post(`${API_URL}/auth/verifyEmail`, {
+        email,
+        token,
+      });
 
       if (response.status === 200) {
         setTimeout(() => {

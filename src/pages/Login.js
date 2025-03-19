@@ -5,6 +5,7 @@ import Navbar from "../components/Navbar";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import GoogleAuth from "../components/GoogleAuth";
 
+const API_URL = process.env.REACT_APP_API_URL
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
 
 
@@ -64,7 +65,7 @@ function Login() {
     try {
       const requestBody = { email, password };
       const response = await axios.post(
-        "http://localhost:8000/auth/login",
+        `${API_URL}/auth/login`,
         requestBody
       );
 
@@ -93,8 +94,9 @@ function Login() {
         }, 3000);
       } else {
         setTimeout(() => {
+          console.log(error)
           setLoading(false);
-          setError(error.response?.data?.message);
+          setError(error.response?.data?.message || "Some error occured. Please try again.");
         }, 1500);
       }
     }

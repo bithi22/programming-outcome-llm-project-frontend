@@ -6,6 +6,7 @@ import ClassCard from "../components/ClassCard";
 import { FaBars, FaTimes } from "react-icons/fa"; // Import icons for mobile actions
 import { motion, AnimatePresence } from "framer-motion";
 
+const API_URL = process.env.REACT_APP_API_URL
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
 
 function Dashboard() {
@@ -47,14 +48,16 @@ function Dashboard() {
         return;
       }
       const response = await axios.get(
-        "http://localhost:8000/user/classrooms",
+        `${API_URL}/user/classrooms`,
         {
           headers: { accessToken: token },
         }
       );
+      console.log(response)
       setClasses(response.data.data.reverse() || []);
     } catch (error) {
-      setError("Failed to fetch classes. Please try again.");
+      console.log(error)
+      setError(error);
     } finally {
       setLoadingClasses(false);
     }
@@ -76,7 +79,7 @@ function Dashboard() {
         return;
       }
       const response = await axios.post(
-        "http://localhost:8000/classroom/join",
+        `${API_URL}/classroom/join`,
         { code: joinCode },
         { headers: { accessToken: token } }
       );
@@ -129,7 +132,7 @@ function Dashboard() {
         return;
       }
       const response = await axios.post(
-        "http://localhost:8000/classroom",
+        `${API_URL}/classroom`,
         { name, course, course_code, start_date, end_date },
         { headers: { accessToken: token } }
       );
@@ -150,6 +153,7 @@ function Dashboard() {
         }, 1500);
       }
     } catch (error) {
+      console.log(error)
       setTimeout(() => {
         setError(
           error.response?.data?.message ||

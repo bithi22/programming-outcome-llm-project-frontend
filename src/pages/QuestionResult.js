@@ -4,6 +4,10 @@ import Navbar from "../components/Navbar";
 import axios from "axios";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import { FaBars, FaTimes } from "react-icons/fa";
+
+const API_URL = process.env.REACT_APP_API_URL
+axios.defaults.withCredentials = true; // Enables sending cookies with every request
 
 function QuestionResult() {
   const location = useLocation();
@@ -29,10 +33,14 @@ function QuestionResult() {
   const [showAddStudentModal, setShowAddStudentModal] = useState(false);
   const [numRowsToAdd, setNumRowsToAdd] = useState("");
 
-  const navItems = [
-    { label: "Join Class", path: "/joinclass" },
-    { label: "Generate Report", path: "/generatereport" },
-  ];
+  // State for top buttons hamburger menu (mobile)
+  const [topMenuOpen, setTopMenuOpen] = useState(false);
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [addStudentModalError, setAddStudentModalError] = useState("");
+
+  const navItems = [];
   const actionButton = { label: "Logout", path: "/logout" };
 
   // Download XLSX including the extra Total Marks column.
@@ -99,7 +107,10 @@ function QuestionResult() {
         const num = parseFloat(row[i]);
         total += isNaN(num) ? 0 : num;
       }
-      return [...row, total];
+
+      // Limit the total to two decimal places.
+      const roundedTotal = Number(total.toFixed(2));
+      return [...row, roundedTotal];
     });
 
     const sheetData = [...headerMatrix, ...finalData];
@@ -215,7 +226,7 @@ function QuestionResult() {
     }
     setTotalColumns(t_columns);
     setGlobalMaxRow(maxRow);
-    setTotalMarks(t_marks);
+    setTotalMarks(Math.round(t_marks * 100) / 100); // Returns 5.68);
 
     // Compute an array of maximum marks for each marks cell (skipping Student ID).
     const getMaxMarksArray = (mapping) => {
@@ -239,8 +250,9 @@ function QuestionResult() {
     setHeaders(hierarchicalHeaders);
 
     const transformData = (record) => {
-      if (record == null) {
-        return [];
+      // If record is null or empty, return 5 empty rows
+      if (record == null || Object.entries(record).length === 0) {
+        return Array.from({ length: 5 }, () => Array(t_columns).fill(""));
       }
       return Object.entries(record).map(([studentId, studentData]) => {
         let row = [studentId];
@@ -293,33 +305,26 @@ function QuestionResult() {
       return;
     }
 
-    // Get the maximum allowed for this cell (note: first marks cell is at index 1).
+    // Get the maximum allowed for this cell (first marks cell is at index 1).
     const max = maxMarksArray[colIndex - 1];
 
-    // 1) If empty, just store it
     if (value === "") {
       updatedData[rowIndex][colIndex] = "";
       setData(updatedData);
       return;
     }
 
-    // 2) Check if the input is either a valid decimal pattern or "." by itself
-    //    This regex allows digits, optional decimal point, and optional more digits
     const decimalPattern = /^\d*\.?\d*$/;
     if (!decimalPattern.test(value)) {
-      // If it doesn't match, do nothing (reject the change)
       return;
     }
 
-    // 3) If the string ends with ".", let the user keep typing
-    //    e.g. "12." should remain "12." until more digits appear
     if (value.endsWith(".")) {
       updatedData[rowIndex][colIndex] = value;
       setData(updatedData);
       return;
     }
 
-    // 4) Otherwise, it's a parseable number. Parse and clamp.
     let numericValue = parseFloat(value);
     if (numericValue < 0) {
       numericValue = 0;
@@ -328,7 +333,6 @@ function QuestionResult() {
       numericValue = max;
     }
 
-    // Convert back to string and store
     updatedData[rowIndex][colIndex] = numericValue.toString();
     setData(updatedData);
   };
@@ -456,6 +460,7 @@ function QuestionResult() {
   };
 
   const saveRecord = async () => {
+    setError("");
     const obtained_marks_mapping = getObtainedMarksMapping();
 
     const requestBody = {
@@ -471,8 +476,9 @@ function QuestionResult() {
     }
 
     try {
+      setIsLoading(true);
       const response = await axios.put(
-        `http://127.0.0.1:8000/question/current-record`,
+        `${API_URL}/question/current-record`,
         requestBody,
         {
           headers: {
@@ -482,20 +488,29 @@ function QuestionResult() {
       );
 
       if (response.status === 200) {
-        console.log("Setting popup visible");
-        setPopupVisible(true);
+        setTimeout(() => {
+          setIsLoading(false);
+          setPopupVisible(true);
+        }, 1500);
         setTimeout(() => {
           setPopupVisible(false);
-        }, 3000);
+        }, 4500);
       } else {
-        console.error("Failed to save record:", response.statusText);
+        setTimeout(() => {
+          setIsLoading(false);
+          setError(response.data.message);
+        }, 1500);
       }
     } catch (error) {
-      console.error("Error saving record:", error);
+      setTimeout(() => {
+        setIsLoading(false);
+        setError(error?.response?.data?.message);
+      }, 1500);
     }
   };
 
   const publishResult = async () => {
+    setError("");
     const token = localStorage.getItem("accessToken");
     if (!token) {
       console.error("Access token not found");
@@ -503,14 +518,16 @@ function QuestionResult() {
     }
 
     if (question.report_submitted) {
+      setError("Report is already submitted.");
       return;
     }
 
     const obtained_marks_mapping = getObtainedMarksMapping();
 
+    setIsLoading(true);
     try {
       const response = await axios.put(
-        `http://127.0.0.1:8000/report/publish`,
+        `${API_URL}/report/publish`,
         {
           question_id,
           current_record: obtained_marks_mapping,
@@ -518,33 +535,39 @@ function QuestionResult() {
         { headers: { accessToken: token } }
       );
       if (response.status === 200) {
-        setPopupMessage(true);
-        question.report_submitted = true;
-        setTimeout(() => setPopupMessage(false), 3000);
+        setTimeout(() => {
+          setIsLoading(false);
+          setPopupMessage(true);
+          question.report_submitted = true;
+        }, 1500);
+        setTimeout(() => setPopupMessage(false), 4500);
       } else {
-        console.error("Failed to generate report:", response.statusText);
+        setTimeout(() => {
+          setIsLoading(false);
+          setError(response.data.message);
+        }, 1500);
       }
     } catch (error) {
-      console.error("Error generating report:", error);
+      setTimeout(() => {
+        setIsLoading(false);
+        setError(error.response?.data?.message);
+      }, 1500);
     }
   };
 
   function convertToNumber(value) {
     if (typeof value === "number") {
-      return value; // Already a number, return as is
+      return value;
     }
-
     if (typeof value === "string") {
-      let trimmed = value.trim(); // Remove leading and trailing spaces
+      let trimmed = value.trim();
       if (trimmed === "") {
-        return ""; // Empty or space-only string
+        return "";
       }
-
       let num = Number(trimmed);
-      return isNaN(num) ? "" : num; // Return number if valid, otherwise ""
+      return isNaN(num) ? "" : num;
     }
-
-    return ""; // Handle other types (null, undefined, objects, etc.)
+    return "";
   }
 
   const handleFileUpload = (e) => {
@@ -558,23 +581,125 @@ function QuestionResult() {
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
 
-      // Convert the worksheet to a 2D array.
       const fileData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
       const headerRowCount = headers.length || 0;
+
+      // Build expected header matrix (as generated in your downloadXLSX function)
+      const expectedHeader = Array.from({ length: headerRowCount }, () =>
+        Array(totalColumns + 1).fill("")
+      );
+      headers.forEach((row, rowIndex) => {
+        let colIndex = 0;
+        row.forEach((cell) => {
+          while (expectedHeader[rowIndex][colIndex] !== "") {
+            colIndex++;
+          }
+          expectedHeader[rowIndex][colIndex] = cell.label;
+          const colSpan = cell.colSpan || 1;
+          const rowSpan = cell.rowSpan || 1;
+          if (colSpan > 1 || rowSpan > 1) {
+            for (let i = rowIndex; i < rowIndex + rowSpan; i++) {
+              for (let j = colIndex; j < colIndex + colSpan; j++) {
+                if (i === rowIndex && j === colIndex) continue;
+                expectedHeader[i][j] = null;
+              }
+            }
+          }
+          colIndex += colSpan;
+        });
+        // Add the Total Marks header in the first row
+        if (rowIndex === 0) {
+          while (expectedHeader[rowIndex][colIndex] !== "") {
+            colIndex++;
+          }
+          expectedHeader[rowIndex][colIndex] = `Total Marks (${totalMarks})`;
+        }
+      });
+
+      console.log(expectedHeader);
+
+      // Extract header rows from the uploaded file
+      const uploadedHeader = fileData.slice(0, headerRowCount);
+      console.log(uploadedHeader);
+
+      // Compare the expected header with the uploaded header
+      let headersMatch = true;
+      for (let i = 0; i < headerRowCount; i++) {
+        const expectedRow = expectedHeader[i];
+        const uploadedRow = uploadedHeader[i] || [];
+        if (expectedRow.length !== uploadedRow.length) {
+          for (
+            let j = expectedRow.length - 1;
+            j > uploadedRow.length - 1;
+            j--
+          ) {
+            if (expectedRow[j] === "" || expectedRow[j] === null) {
+              continue;
+            } else {
+              headersMatch = false;
+              break;
+            }
+          }
+        }
+
+        for (let j = 0; j < uploadedRow.length; j++) {
+          const expectedCell = expectedRow[j] === null ? "" : expectedRow[j];
+          const uploadedCell = uploadedRow[j] == null ? "" : uploadedRow[j];
+          if (expectedCell !== uploadedCell) {
+            headersMatch = false;
+            break;
+          }
+        }
+
+        if (!headersMatch) break;
+      }
+
+      if (!headersMatch) {
+        setError("Please use the downloaded template file.");
+        setTimeout(() => {
+          setError("");
+        }, 3000);
+        return;
+      }
+
+      // Process data rows if headers match
       const dataRows = fileData.slice(headerRowCount);
       const filteredRows = dataRows.filter(
         (row) => row[0] !== undefined && row[0] !== null && row[0] !== ""
       );
-      // Remove the extra Total Marks column (last column) before updating state.
       const trimmedRows = filteredRows.map((row) => row.slice(0, totalColumns));
+
       const finalData = trimmedRows.map((row) => {
         const newRow = [];
         for (let i = 0; i < totalColumns; i++) {
-          newRow[i] = convertToNumber(row[i]) ?? "";
+          if (i === 0) {
+            // Student ID column: leave as is.
+            newRow[i] = String(row[i]) || "";
+          } else {
+            let cellValue = convertToNumber(row[i]);
+            if (cellValue === "") {
+              newRow[i] = "";
+            } else {
+              let numValue = Number(cellValue);
+              if (numValue < 0) {
+                numValue = 0;
+              }
+              const allowedMax = maxMarksArray[i - 1];
+              if (allowedMax !== undefined && numValue > allowedMax) {
+                numValue = allowedMax;
+              }
+              newRow[i] = numValue.toString();
+            }
+          }
         }
         return newRow;
       });
-      setData(finalData);
+
+      if (finalData.length === 0) {
+        setData(Array.from({ length: 5 }, () => Array(totalColumns).fill("")));
+      } else {
+        setData(finalData);
+      }
     };
 
     reader.readAsBinaryString(file);
@@ -586,61 +711,140 @@ function QuestionResult() {
     }
   };
 
-  // Calculate paginated data for display.
   const startIndex = (currentPage - 1) * rowsPerPage;
   const paginatedData = data.slice(startIndex, startIndex + rowsPerPage);
   const totalPages = Math.ceil(data.length / rowsPerPage);
 
   return (
-    <div>
-      <Navbar
-        navItems={navItems}
-        actionButton={actionButton}
-        buttonStyle="border border-red-500 text-red-500 py-2 px-4 rounded-md hover:bg-red-500 hover:text-white"
-      />
-      <div className="container mx-auto px-6 mt-24">
-        <div className="flex flex-wrap items-center mb-4 bg-white py-3 top-0 z-10">
-          <button
-            onClick={() => setShowAddStudentModal(true)}
-            className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 mr-2"
-          >
-            Add Student
-          </button>
-          <button
-            onClick={saveRecord}
-            className="bg-green-500 text-white px-4 py-2 rounded-md hover:bg-green-600 mr-2"
-          >
-            Save Record
-          </button>
-          {!question?.report_submitted && (
+    <div className="flex flex-col bg-white min-h-screen">
+      <Navbar navItems={navItems} logout={true} />
+      <div className="h-16"></div>
+      <div className="container mx-auto px-6 mt-8 mb-6">
+        {/* Top buttons container without a white bg */}
+        <h1 className="text-lg font-inter font-semibold tracking-[-0.04em] text-center">
+          {" "}
+          {`Marksheet for ${question.name}`}{" "}
+        </h1>
+        {/* Top Buttons Container */}
+        <div className="flex flex-wrap items-center justify-between mb-4 py-3 relative">
+          {/* Inline buttons for large screens */}
+          <div className="hidden md:flex w-full justify-between">
+            <div className="flex space-x-4">
+              <button
+                onClick={() => setShowAddStudentModal(true)}
+                disabled={isLoading}
+                className={`bg-green-700 text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] hover:bg-green-800 transition ${
+                  isLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                Add Student
+              </button>
+              <button
+                onClick={saveRecord}
+                disabled={isLoading}
+                className={`bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] hover:bg-[#2C36CC] ${
+                  isLoading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                Save Record
+              </button>
+              {!question?.report_submitted && (
+                <button
+                  onClick={publishResult}
+                  disabled={isLoading}
+                  className={`bg-purple-700 text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] hover:bg-purple-800 ${
+                    isLoading ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                >
+                  Publish Result
+                </button>
+              )}
+            </div>
+            <div className="flex space-x-4">
+              <button
+                onClick={downloadXLSX}
+                disabled={isLoading}
+                className="border-2 border-[#3941FF] text-[#3941FF] py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] hover:bg-[#2C36CC] hover:text-white transition"
+              >
+                Download XLSX
+              </button>
+              <button
+                onClick={triggerFileUpload}
+                disabled={isLoading}
+                className="border-2 border-[#3941FF] text-[#3941FF] py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] hover:bg-[#2C36CC] hover:text-white transition"
+              >
+                Upload XLSX
+              </button>
+              <input
+                type="file"
+                accept=".xlsx, .xls"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                style={{ display: "none" }}
+              />
+            </div>
+          </div>
+          {/* Hamburger menu for small screens */}
+          <div className="md:hidden flex justify-end w-full">
             <button
-              onClick={publishResult}
-              className="bg-purple-500 text-white px-4 py-2 rounded-md hover:bg-purple-600 mr-2"
+              onClick={() => setTopMenuOpen(!topMenuOpen)}
+              className="text-black focus:outline-none"
             >
-              Publish Result
+              {topMenuOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
             </button>
-          )}
-          <button
-            onClick={downloadXLSX}
-            className="bg-yellow-500 text-white px-4 py-2 rounded-md hover:bg-yellow-600 mr-2"
-          >
-            Download XLSX
-          </button>
-          <button
-            onClick={triggerFileUpload}
-            className="bg-indigo-500 text-white px-4 py-2 rounded-md hover:bg-indigo-600 mr-2"
-          >
-            Upload XLSX
-          </button>
-          <input
-            type="file"
-            accept=".xlsx, .xls"
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            style={{ display: "none" }}
-          />
+            {topMenuOpen && (
+              <div className="absolute right-0 mt-10 w-48 bg-white shadow-md rounded-md border border-gray-300 py-2 px-4 flex flex-col space-y-2 z-50">
+                <button
+                  onClick={() => {
+                    setShowAddStudentModal(true);
+                    setTopMenuOpen(false);
+                  }}
+                  className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
+                >
+                  Add Student
+                </button>
+                <button
+                  onClick={() => {
+                    saveRecord();
+                    setTopMenuOpen(false);
+                  }}
+                  className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
+                >
+                  Save Record
+                </button>
+                {!question?.report_submitted && (
+                  <button
+                    onClick={() => {
+                      publishResult();
+                      setTopMenuOpen(false);
+                    }}
+                    className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
+                  >
+                    Publish Result
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    downloadXLSX();
+                    setTopMenuOpen(false);
+                  }}
+                  className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
+                >
+                  Download XLSX
+                </button>
+                <button
+                  onClick={() => {
+                    triggerFileUpload();
+                    setTopMenuOpen(false);
+                  }}
+                  className="text-black text-lg py-2 px-4 border-b border-gray-200 hover:bg-gray-100"
+                >
+                  Upload XLSX
+                </button>
+              </div>
+            )}
+          </div>
         </div>
-        {/* Add Student Modal */}
         {showAddStudentModal && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white p-6 rounded shadow-md w-80">
@@ -651,7 +855,6 @@ function QuestionResult() {
                 value={numRowsToAdd}
                 onChange={(e) => {
                   const val = e.target.value;
-                  // Accept only positive integers (or empty string)
                   if (val === "" || /^[1-9]\d*$/.test(val)) {
                     setNumRowsToAdd(val);
                   }
@@ -659,13 +862,19 @@ function QuestionResult() {
                 placeholder="Enter number of rows"
                 className="border p-2 mb-4 w-full"
               />
-              <div className="flex justify-end">
+              {addStudentModalError && (
+                <p className="text-red-500 text-center mb-4 font-bold">
+                  {addStudentModalError}
+                </p>
+              )}
+              <div className="flex justify-end space-x-4">
                 <button
                   onClick={() => {
                     setShowAddStudentModal(false);
                     setNumRowsToAdd("");
+                    setAddStudentModalError("");
                   }}
-                  className="mr-2 bg-gray-300 text-black px-4 py-2 rounded"
+                  className="bg-gray-300 text-black py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-gray-400"
                 >
                   Cancel
                 </button>
@@ -673,12 +882,17 @@ function QuestionResult() {
                   onClick={() => {
                     const count = parseInt(numRowsToAdd, 10);
                     if (!isNaN(count) && count > 0) {
+                      setAddStudentModalError("");
                       addRows(count);
                       setShowAddStudentModal(false);
                       setNumRowsToAdd("");
+                    } else {
+                      setAddStudentModalError(
+                        "Please provide a positive integer."
+                      );
                     }
                   }}
-                  className="bg-blue-500 text-white px-4 py-2 rounded"
+                  className={`bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC]`}
                 >
                   Add
                 </button>
@@ -687,7 +901,6 @@ function QuestionResult() {
           </div>
         )}
 
-        {/* Popup for saved records */}
         {popupVisible && (
           <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
             <div className="bg-blue-500 text-white px-6 py-4 rounded-md shadow-lg">
@@ -734,11 +947,42 @@ function QuestionResult() {
             </div>
           </div>
         )}
-
-        {/* Scrollable Table */}
+        {isLoading && (
+          <p className="text-red-500 mb-4 font-bold">{isLoading}</p>
+        )}
+        {isLoading && (
+          <div className="flex justify-center mb-4">
+            <svg
+              className="animate-spin h-5 w-5 text-blue-500"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v8H4z"
+              ></path>
+            </svg>
+            <div className="mx-2">
+              <span>Please wait...</span>
+            </div>
+          </div>
+        )}
+        {error && (
+          <p className="text-red-500 mb-4 text-center font-bold">{error}</p>
+        )}
         <div className="overflow-y-auto max-h-[500px] border border-gray-300">
           <table className="table-auto w-full border-collapse border border-gray-300">
-            <thead className="bg-gray-100 sticky top-0 z-10">
+            <thead className="">
               {headers.map((headerRow, rowIndex) => (
                 <tr key={rowIndex}>
                   {headerRow.map((header, colIndex) => (
@@ -746,19 +990,28 @@ function QuestionResult() {
                       key={`${rowIndex}-${colIndex}`}
                       colSpan={header.colSpan}
                       rowSpan={header.rowSpan}
-                      className="border border-gray-300 px-4 py-2 text-center"
+                      className="border border-gray-300 px-4 py-2 text-center bg-black text-white font-inter font-semibold"
                     >
                       {header.label}
                     </th>
                   ))}
                   {rowIndex === 0 && (
-                    <th
-                      colSpan={1}
-                      rowSpan={globalMaxRow + 1}
-                      className="border border-gray-300 px-4 py-2 text-center"
-                    >
-                      {`Total Marks (${totalMarks})`}
-                    </th>
+                    <>
+                      <th
+                        colSpan={1}
+                        rowSpan={globalMaxRow + 1}
+                        className="border border-gray-300 px-4 py-2 text-center bg-black text-white font-inter font-semibold"
+                      >
+                        {`Total Marks (${totalMarks})`}
+                      </th>
+                      <th
+                        colSpan={1}
+                        rowSpan={globalMaxRow + 1}
+                        className="border border-gray-300 px-4 py-2 text-center bg-black text-white font-inter font-semibold"
+                      >
+                        Actions
+                      </th>
+                    </>
                   )}
                 </tr>
               ))}
@@ -775,7 +1028,7 @@ function QuestionResult() {
                     {row.map((cell, colIndex) => (
                       <td
                         key={colIndex}
-                        className="border border-gray-300 px-4 py-2"
+                        className="border border-gray-300 px-4 py-2 bg-white text-black text-center"
                       >
                         <input
                           type="text"
@@ -787,14 +1040,14 @@ function QuestionResult() {
                               e.target.value
                             )
                           }
-                          className="w-full border-none bg-transparent focus:outline-none"
+                          className="w-full text-center border-none bg-transparent focus:outline-none"
                         />
                       </td>
                     ))}
-                    <td className="border border-gray-300 px-4 py-2 text-center">
-                      {total}
+                    <td className="border border-gray-300 px-4 py-2 text-center bg-white text-black text-center">
+                      {Number(total.toFixed(2))}
                     </td>
-                    <td className="border border-gray-300 px-4 py-2 text-center">
+                    <td className="border border-gray-300 px-4 py-2 text-center bg-white text-black text-center">
                       <button onClick={() => deleteRow(startIndex + rowIndex)}>
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
@@ -818,9 +1071,9 @@ function QuestionResult() {
             </tbody>
           </table>
         </div>
-        {/* Pagination: Fixed at the bottom */}
-        <div className="flex items-center justify-between mt-4 bg-white py-3 sticky bottom-0 z-10">
-          <div>
+        {/* Bottom pagination container without white bg */}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between mt-4 py-3 space-y-4">
+          <div className="flex mx-2 space-x-2 items-center">
             <span>Rows per page: </span>
             <select
               value={rowsPerPage}
@@ -828,7 +1081,7 @@ function QuestionResult() {
                 setRowsPerPage(parseInt(e.target.value, 10));
                 setCurrentPage(1);
               }}
-              className="border p-2 rounded"
+              className="border-2 border-black text-black p-1 rounded bg-transparent"
             >
               <option value={20}>20</option>
               <option value={50}>50</option>
@@ -839,7 +1092,7 @@ function QuestionResult() {
             <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((prev) => prev - 1)}
-              className="px-2 py-1 border rounded mr-2"
+              className="border-2 border-[#3941FF] text-[#3941FF] justify-end py-1 px-2 mx-2 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] hover:text-white hover:border-[#2C36CC] transition disabled:hover:bg-transparent disabled:hover:text-[#3941FF] disabled:hover:border-[#3941FF] disabled:cursor-not-allowed"
             >
               Previous
             </button>
@@ -849,7 +1102,7 @@ function QuestionResult() {
             <button
               disabled={currentPage >= totalPages}
               onClick={() => setCurrentPage((prev) => prev + 1)}
-              className="px-2 py-1 border rounded ml-2"
+              className="border-2 border-[#3941FF] text-[#3941FF] justify-end py-1 px-2 mx-2 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] hover:text-white hover:border-[#2C36CC] transition disabled:hover:bg-transparent disabled:hover:text-[#3941FF] disabled:hover:border-[#3941FF] disabled:cursor-not-allowed"
             >
               Next
             </button>

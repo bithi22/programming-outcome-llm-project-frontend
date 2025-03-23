@@ -1,139 +1,271 @@
-import React, { useState } from 'react';
-import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
+import React, { useState,useEffect } from "react";
+import axios from "axios";
+import { useNavigate, NavLink } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
+import GoogleAuth from "../components/GoogleAuth";
+
+const API_URL = process.env.REACT_APP_API_URL
+axios.defaults.withCredentials = true; // Enables sending cookies with every request
+
 
 function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
 
-  const navItems = [
-    { label: 'Home', path: '/' },
-    { label: 'Contact Us', path: '/contactus' },
-  ];
+  const navItems = [];
 
-  const actionButton = { label: 'Signup', path: '/signup' };
+  const actionButton = { label: "Signup", path: "/register" };
+
+  // Simple email regex for validation
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("accessToken");
+    if (token) {
+      navigate("/dashboard");
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    setLoading(true);
+    setError("");
+    setEmailError("");
+    setPasswordError("");
 
-    if (!email || !password) {
-      setError('Both email and password are required.');
-      setLoading(false);
+    let valid = true;
+    if (!email) {
+      setEmailError("Email is required.");
+      valid = false;
+    } else if (!validateEmail(email)) {
+      setEmailError("Invalid email address.");
+      valid = false;
+    }
+
+    if (!password) {
+      setPasswordError("Password is required.");
+      valid = false;
+    }
+
+    if (!valid) {
       return;
     }
 
+    setLoading(true);
     try {
       const requestBody = { email, password };
-      const response = await axios.post('http://127.0.0.1:8000/auth/login', requestBody);
+      const response = await axios.post(
+        `${API_URL}/auth/login`,
+        requestBody
+      );
 
       if (response.status === 200) {
-        localStorage.setItem('accessToken', response.headers.accesstoken);
-        navigate('/dashboard');
+        localStorage.setItem("accessToken", response.headers.accesstoken);
+        setTimeout(() => {
+          setLoading(false);
+          navigate("/dashboard");
+        }, 1500);
       }
     } catch (error) {
-      setError(error.response?.data?.message || 'Invalid email or password.');
-    } finally {
-      setLoading(false);
+      if (
+        error.response?.status == 400 &&
+        error.response?.data?.message
+          .toLowerCase()
+          .includes("email is not verified".toLowerCase())
+      ) {
+        setTimeout(() => {
+          setError(
+            "Your email is not verfied. Re-directing to email verfification..."
+          );
+        }, 1500);
+        setTimeout(() => {
+          setLoading(false);
+          navigate(`/emailVerification?email=${encodeURIComponent(email)}`);
+        }, 3000);
+      } else {
+        setTimeout(() => {
+          console.log(error)
+          setLoading(false);
+          setError(error.response?.data?.message || "Some error occured. Please try again.");
+        }, 1500);
+      }
     }
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-white flex flex-col items-center">
+    <div className="relative min-h-screen w-full bg-white">
       {/* Navbar */}
       <Navbar
         navItems={navItems}
         actionButton={actionButton}
-        buttonStyle="bg-blue-500 text-white no-underline py-2 px-4 rounded-md hover:bg-blue-600"
+        buttonStyle="bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] "
       />
+      <div className="h-16"></div>
 
-      {/* Vector Images (scaled by viewport width) */}
-      <img
-        src="/assets/Vector1.png"
-        alt="Decorative Vector 1"
-        className="absolute bottom-0 left-0 w-[25vw] md:w-[20vw] h-auto"
-      />
-      <img
-        src="/assets/vector2.png"
-        alt="Decorative Vector 2"
-        className="absolute top-[4rem] right-0 w-[25vw] md:w-[20vw] h-auto"
-      />
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)]">
+        {/* Vector Images (scaled by viewport width) */}
+        <img
+          src="/assets/Vector1.png"
+          alt="Decorative Vector 1"
+          className="absolute bottom-0 left-0 w-[25vw] md:w-[20vw] h-auto"
+        />
+        <img
+          src="/assets/vector2.png"
+          alt="Decorative Vector 2"
+          className="absolute top-[4rem] right-0 w-[25vw] md:w-[20vw] h-auto"
+        />
 
-      {/* Main Container */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full">
-        {/* Login Card */}
-        <div className="relative z-10 bg-white shadow-lg rounded-xl p-8 w-11/12 max-w-sm md:max-w-md">
-          <h2 className="text-2xl font-bold mb-4 text-left">
-            Welcome back to Shamik
-            <span className="text-blue-500">LLM</span>
-          </h2>
-          <p className="text-black mb-6 text-left">
-            Register to ShamikLLM and Unleash the Power of Ajke Thak.
-          </p>
+          {/* Login Card */}
+          <div className="flex flex-col bg-white shadow-lg rounded-xl p-8 w-11/12 max-w-sm md:max-w-md my-4 z-20">
+            <h2 className="text-2xl font-bold mb-2 text-left">
+              Welcome back to <span className="font-serif font-bold">OBE<span className="text-blue-500">lytics</span></span>
+            </h2>
+            <p className="text-black mb-2 text-left">
+              A single source platform for Outcome Based Education
+            </p>
 
-          <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label
-                htmlFor="email"
-                className="block font-bold text-left mb-1 text-black"
-              >
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter your email"
-              />
-            </div>
-            <div className="mb-4">
-              <label
-                htmlFor="password"
-                className="block font-bold text-left mb-1 text-black"
-              >
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-2 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Enter your password"
-              />
-            </div>
-            {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-            <button
-              type="submit"
-              className="w-full bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 flex justify-center items-center"
-              disabled={loading}
-            >
-              {loading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                  Logging in...
-                </>
-              ) : (
-                'Login'
+            <form onSubmit={handleSubmit}>
+              <div className="mb-2">
+                <label
+                  htmlFor="email"
+                  className="block font-bold text-left mb-1 text-black"
+                >
+                  Email
+                </label>
+                <input
+                  type="text"
+                  id="email"
+                  spellCheck={false}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-4 py-2 mb-1 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter your email"
+                />
+                {emailError && (
+                  <p className="text-red-500 text-sm mb-1">{emailError}</p>
+                )}
+              </div>
+              <div className="mb-2">
+                <label
+                  htmlFor="password"
+                  className="block font-bold text-left mb-1 text-black"
+                >
+                  Password
+                </label>
+                <div className="relative">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    id="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="w-full px-4 py-2 mb-1 border border-black rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+                    placeholder="Enter your password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-2 top-1/2 transform -translate-y-1/2 text-[#3941FF]"
+                  >
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
+                  </button>
+                </div>
+                {passwordError && (
+                  <p className="text-red-500 text-sm mb-1">{passwordError}</p>
+                )}
+              </div>
+
+              {/* Forgot Password Link */}
+              <div className="flex justify-end mb-4">
+                <NavLink
+                  to="/forgotpassword"
+                  className="text-[#3941FF] hover:text-[#2336CC] hover:font-bold hover:no-underline"
+                >
+                  Forgot Password?
+                </NavLink>
+              </div>
+
+              {error && (
+                <p className="text-red-500 mb-4 text-center font-bold">
+                  {error}
+                </p>
               )}
-            </button>
-          </form>
+              {loading && (
+                <div className="flex justify-center mb-4">
+                  <svg
+                    className="animate-spin h-5 w-5 text-blue-500"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8H4z"
+                    ></path>
+                  </svg>
+                  <div className="mx-2">
+                    <span>Please wait...</span>
+                  </div>
+                </div>
+              )}
 
-          <p className="mt-4 text-gray-600 text-center">
-            Don't have an account?{' '}
-            <a href="/register" className="text-blue-500 hover:underline">
-              Register
-            </a>
-          </p>
-        </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className={`w-full bg-[#3941ff] text-white py-2 px-4 rounded-md font-inter font-semibold text-[16px] tracking-[-0.04em] text-center hover:bg-[#2C36CC] ${
+                  loading ? "opacity-50 cursor-not-allowed" : ""
+                }`}
+              >
+                Login
+              </button>
+            </form>
+
+            {/* Divider with "or" */}
+            <div className="flex items-center my-2">
+              <div className="flex-grow border-t border-gray-300"></div>
+              <span className="px-2 text-gray-500">or</span>
+              <div className="flex-grow border-t border-gray-300"></div>
+            </div>
+
+            {/* Google Login Button */}
+            <GoogleAuth
+              setGlobalError={setError}
+              navigate={navigate}
+              setLoading={setLoading}
+            />
+
+            <p className="mt-4 text-gray-600 text-center">
+              Don't have an account?{" "}
+              <NavLink
+                to="/register"
+                className={({ isActive }) =>
+                  isActive
+                    ? "text-[#3941FF]"
+                    : "text-[#3941FF] hover:text-[#2336CC] hover:font-bold hover:no-underline"
+                }
+              >
+                Register
+              </NavLink>
+            </p>
+          </div>
       </div>
     </div>
   );

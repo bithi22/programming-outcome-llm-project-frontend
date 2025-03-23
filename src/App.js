@@ -13,6 +13,8 @@ import QuestionDisplay from './pages/QuestionDisplay';
 import CoPoMapping from './pages/CoPoMapping';
 import QuestionReport from './pages/QuestionReport';
 import ClassroomReport from './pages/ClassroomReport';
+import ForgetPassword from './pages/ForgetPassword';
+import SemesterReport from './pages/SemesterReport';
 import Intro from './pages/Intro';
 
 
@@ -35,6 +37,8 @@ function App() {
         <Route path="/copomapping" element={<CoPoMapping/>}/>
         <Route path="/showquestionreport" element={<QuestionReport/>}/>
         <Route path="/showclassroomreport" element={<ClassroomReport/>}/>
+        <Route path='/forgotpassword' element={<ForgetPassword/>}/>
+        <Route path='/report' element={<SemesterReport/>}/>
 
       </Routes>
     </Router>

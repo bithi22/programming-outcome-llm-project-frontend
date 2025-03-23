@@ -92,7 +92,6 @@ function Register() {
     setLoading(true);
     try {
       console.log(`${API_URL}/auth/register`)
-      return
       const requestBody = { email, password };
       const response = await axios.post(
         `${API_URL}/auth/register`,

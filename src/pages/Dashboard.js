@@ -6,7 +6,7 @@ import ClassCard from "../components/ClassCard";
 import { FaBars, FaTimes } from "react-icons/fa"; // Import icons for mobile actions
 import { motion, AnimatePresence } from "framer-motion";
 
-const API_URL = process.env.REACT_APP_API_URL
+const API_URL = process.env.REACT_APP_API_URL;
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
 
 function Dashboard() {
@@ -47,19 +47,20 @@ function Dashboard() {
         setLoadingClasses(false);
         return;
       }
-      const response = await axios.get(
-        `${API_URL}/user/classrooms`,
-        {
-          headers: { accessToken: token },
-        }
-      );
-      console.log(response)
+      const response = await axios.get(`${API_URL}/user/classrooms`, {
+        headers: { accessToken: token },
+      });
+      console.log(response);
       setClasses(response.data.data.reverse() || []);
+      setTimeout(() => {
+        setLoadingClasses(false);
+      }, 1500);
     } catch (error) {
-      console.log(error)
+      console.log(error);
       setError(error);
-    } finally {
-      setLoadingClasses(false);
+      setTimeout(() => {
+        setLoadingClasses(false);
+      }, 1500);
     }
   };
 
@@ -153,7 +154,7 @@ function Dashboard() {
         }, 1500);
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
       setTimeout(() => {
         setError(
           error.response?.data?.message ||
@@ -254,21 +255,28 @@ function Dashboard() {
           <AnimatePresence mode="wait">
             {loadingClasses ? (
               // Skeleton Loader (Motion Container)
-              <motion.div
-                key="skeleton"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.4 }}
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-              >
-                {[...Array(3)].map((_, idx) => (
-                  <div
-                    key={idx}
-                    className="bg-gray-200 animate-pulse h-32 w-full rounded-md"
-                  />
-                ))}
-              </motion.div>
+              <div className="container mx-auto">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[...Array(3)].map((_, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-white shadow-md rounded-lg p-6"
+                    >
+                      <motion.div
+                        className="animate-pulse"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.4, ease: "easeInOut" }}
+                      >
+                        <div className="h-6 bg-gray-300 rounded w-1/3 mb-4"></div>
+                        <div className="h-4 bg-gray-300 rounded w-1/2 mb-2"></div>
+                        <div className="h-4 bg-gray-300 rounded w-1/4 mb-2"></div>
+                      </motion.div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             ) : (
               // Actual Class Cards (Motion Container)
               <motion.div

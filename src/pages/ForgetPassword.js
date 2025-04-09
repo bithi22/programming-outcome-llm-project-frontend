@@ -26,11 +26,20 @@ function ForgetPassword() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-      navigate("/dashboard");
-    }
+    const checkAccessTokenValidity = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        if (token) {
+          await axios.get(`${API_URL}/auth/`, {
+            headers: { accessToken: token },
+          });
+          navigate("/dashboard");
+        }
+      } catch (err) {}
+    };
+    checkAccessTokenValidity();
   }, []);
+
 
   // First step: request a verification token by providing the email
   const handleGetToken = async (e) => {

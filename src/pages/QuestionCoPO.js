@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Navbar from "../components/Navbar";
+import ErrorPopup from "../components/ErrorPopUp";
+
 
 const API_URL = process.env.REACT_APP_API_URL
 
@@ -20,6 +22,7 @@ function QuestionCoPo() {
   );
 
   const [question, setQuestion] = useState(null);
+  const [errorPopup, setErrorPopup] = useState(false);
 
   // New editable state for question name and weight
   const [editableQuestionName, setEditableQuestionName] =
@@ -35,8 +38,6 @@ function QuestionCoPo() {
   const [error, setError] = useState("");
 
   const navItems = [];
-
-  const actionButton = { label: "Logout", path: "/logout" };
 
   useEffect(() => {
     setQuestion(questionData);
@@ -303,9 +304,20 @@ function QuestionCoPo() {
     }
 
     const token = localStorage.getItem("accessToken");
-    if (!token) {
-      return;
-    }
+      if (!token) {
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return;
+      }
 
     // Prepare the payload using the editable fields
     const payload = {
@@ -330,6 +342,9 @@ function QuestionCoPo() {
       );
 
       if (response.status === 201) {
+        if(response?.headers?.accesstoken){
+          localStorage.setItem("accessToken", response.headers.accesstoken);
+        }
         // On success, show success message
         setTimeout(() => {
           setIsLoading(false);
@@ -354,10 +369,25 @@ function QuestionCoPo() {
           setPopupMessage("");
         }, 1500);
       }
-    } catch (error) {
+    } catch (err) {
+      if (err?.response?.status === 401) {
+        setIsLoading(false);
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return ;
+      }
       setTimeout(() => {
         setIsLoading(false);
-        setError(error.response?.data?.message);
+        setError(err.response?.data?.message || "Some error occured. Please try again.");
         setPopupMessage("");
       }, 1500);
     }
@@ -367,7 +397,12 @@ function QuestionCoPo() {
     <div className="flex flex-col bg-white min-h-screen overflow-x-hidden">
       <Navbar navItems={navItems} logout={true} />
       <div className="h-16"></div>
-
+      <ErrorPopup
+        visible={errorPopup}
+        errorMessage={
+          "Your login session has been expired. Please login again."
+        }
+      ></ErrorPopup>
       {/* Popup Message */}
       {popupMessage && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">

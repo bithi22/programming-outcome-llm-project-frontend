@@ -5,8 +5,9 @@ import Navbar from "../components/Navbar";
 import { FiCopy } from "react-icons/fi";
 import { FaBars, FaTimes } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
+import ErrorPopup from "../components/ErrorPopUp";
 
-const API_URL = process.env.REACT_APP_API_URL
+const API_URL = process.env.REACT_APP_API_URL;
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
 
 function Classroom() {
@@ -24,6 +25,7 @@ function Classroom() {
   const [showInviteCard, setShowInviteCard] = useState(false);
   const [teacherCopySuccess, setTeacherCopySuccess] = useState(false);
   const [committeeCopySuccess, setCommitteeCopySuccess] = useState(false);
+  const [errorPopup, setErrorPopup] = useState(false);
 
   // New state variables for mobile menus
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false);
@@ -32,9 +34,6 @@ function Classroom() {
   const navigate = useNavigate();
   const location = useLocation();
   const classroom_id = location.state?.classroom_id;
-
-  const navItems = [];
-  const actionButton = { label: "Logout", path: "/logout" };
 
   // Copy functions for teacher and committee codes
   const copyTeacherCode = () => {
@@ -74,22 +73,38 @@ function Classroom() {
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) {
-        setError("You are not logged in. Please log in first.");
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
         return;
       }
-      const response = await axios.get(
-        `${API_URL}/classroom/${id}`,
-        {
-          headers: {
-            accessToken: token,
-          },
-        }
-      );
+
+      const response = await axios.get(`${API_URL}/classroom/${id}`, {
+        headers: {
+          accessToken: token,
+        },
+      });
       setClassroomDetails(response.data.data);
-    } catch (error) {
-      setError("Failed to fetch classroom details. Please try again.");
+      if (response?.headers?.accesstoken) {
+        localStorage.setItem("accessToken", response.headers.accesstoken);
+      }
+    } catch (err) {
+      setError(
+        err?.response?.data?.message ||
+          "Failed to fetch classroom details. Please try again."
+      );
     } finally {
-      setIsClassroomLoading(false);
+      setTimeout(() => {
+        setIsClassroomLoading(false);
+      }, 1500);
     }
   };
 
@@ -103,10 +118,21 @@ function Classroom() {
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) {
-        setError("You are not logged in. Please log in first.");
+        setErrorPopup(true);
         setIsSyllabusLoading(false);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
         return;
       }
+
       const response = await axios.post(
         `${API_URL}/classroom/co-po-mapping`,
         { classroom_id, syllabus: syllabusText },
@@ -131,16 +157,21 @@ function Classroom() {
             },
           });
         }, 1500);
+        if (response?.headers?.accesstoken) {
+          localStorage.setItem("accessToken", response.headers.accesstoken);
+        }
       } else {
         setTimeout(() => {
           setIsSyllabusLoading(false);
           setSyllabusError(response.data?.message);
         }, 1500);
       }
-    } catch (error) {
+    } catch (err) {
       setTimeout(() => {
         setIsSyllabusLoading(false);
-        setSyllabusError(error.response?.data?.message);
+        setSyllabusError(
+          err.response?.data?.message || "Some error occured. Please try again."
+        );
       }, 1500);
     }
   };
@@ -267,8 +298,18 @@ function Classroom() {
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) {
-        setCoPoEditError("You are not logged in. Please log in first.");
         setIsLoading(false);
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
         return;
       }
       const response = await axios.put(
@@ -294,15 +335,33 @@ function Classroom() {
           setCoPoEditError("");
           setIsLoading(false);
         }, 1500);
+        if(response?.headers?.accesstoken){
+          localStorage.setItem("accessToken", response.headers.accesstoken);
+        }
       } else {
         setTimeout(() => {
           setIsLoading(false);
           setCoPoEditError(response.data.message);
         }, 1500);
       }
-    } catch (error) {
+    } catch (err) {
+      if (err?.response?.status === 401) {
+        setIsLoading(false);
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return ;
+      }
       setTimeout(() => {
-        setCoPoEditError(error.response?.data?.message);
+        setCoPoEditError(err.response?.data?.message || "Some error occured. Please try again.");
         setIsLoading(false);
       }, 1500);
     }
@@ -338,7 +397,12 @@ function Classroom() {
     <div className="flex flex-col bg-white min-h-screen">
       <Navbar logout={true} />
       <div className="h-16"></div>
-
+      <ErrorPopup
+        visible={errorPopup}
+        errorMessage={
+          "Your login session has been expired. Please login again."
+        }
+      ></ErrorPopup>
       {showInviteCard && (
         // Invite Members Modal Overlay
         <motion.div
@@ -945,7 +1009,8 @@ function Classroom() {
                               className="px-4 py-2 border text-center"
                               colSpan={isEditingTable ? 6 : 5}
                             >
-                              No CO-PO data available. Please upload the syllabus to get started.
+                              No CO-PO data available. Please upload the
+                              syllabus to get started.
                             </td>
                           </tr>
                         )}

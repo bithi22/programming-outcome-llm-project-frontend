@@ -5,6 +5,7 @@ import Navbar from "../components/Navbar";
 import ClassCard from "../components/ClassCard";
 import { FaBars, FaTimes } from "react-icons/fa"; // Import icons for mobile actions
 import { motion, AnimatePresence } from "framer-motion";
+import ErrorPopup from "../components/ErrorPopUp";
 
 const API_URL = process.env.REACT_APP_API_URL;
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
@@ -27,11 +28,11 @@ function Dashboard() {
   const [loadingJoin, setLoadingJoin] = useState(false);
   const [loadingCreate, setLoadingCreate] = useState(false);
   const [isActionMenuOpen, setIsActionMenuOpen] = useState(false); // State for mobile actions menu
+  const [errorPopup, setErrorPopup] = useState(false);
+
   const navigate = useNavigate();
 
   const navItems = [{ label: "Semester Report", path: "/report" }];
-
-  const actionButton = { label: "Logout", path: "/logout" };
 
   // Fetch registered classes on component mount
   useEffect(() => {
@@ -43,21 +44,49 @@ function Dashboard() {
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) {
-        setError("You are not logged in. Please log in first.");
         setLoadingClasses(false);
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
         return;
       }
       const response = await axios.get(`${API_URL}/user/classrooms`, {
         headers: { accessToken: token },
       });
-      console.log(response);
+      if (response?.headers?.accesstoken) {
+        localStorage.setItem("accessToken", response.headers.accesstoken);
+      }
       setClasses(response.data.data.reverse() || []);
       setTimeout(() => {
         setLoadingClasses(false);
       }, 1500);
-    } catch (error) {
-      console.log(error);
-      setError(error);
+    } catch (err) {
+      if (err?.response?.status === 401) {
+        setLoadingClasses(false);
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return;
+      }
+      setError(
+        err?.response?.data?.message || "Some error occured. Please try again."
+      );
       setTimeout(() => {
         setLoadingClasses(false);
       }, 1500);
@@ -75,8 +104,18 @@ function Dashboard() {
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) {
-        setError("You are not logged in. Please log in first.");
         setLoadingJoin(false);
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
         return;
       }
       const response = await axios.post(
@@ -93,11 +132,29 @@ function Dashboard() {
           fetchRegisteredClasses();
           setLoadingJoin(false);
         }, 1500);
+        if (response?.headers?.accesstoken) {
+          localStorage.setItem("accessToken", response.headers.accesstoken);
+        }
       }
-    } catch (error) {
+    } catch (err) {
+      if (err?.response?.status === 401) {
+        setLoadingJoin(false);
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return;
+      }
       setTimeout(() => {
         setError(
-          error.response?.data?.message ||
+          err.response?.data?.message ||
             "Failed to join classroom. Please try again."
         );
         setLoadingJoin(false);
@@ -128,8 +185,18 @@ function Dashboard() {
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) {
-        setError("You are not logged in. Please log in first.");
         setLoadingCreate(false);
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
         return;
       }
       const response = await axios.post(
@@ -152,12 +219,29 @@ function Dashboard() {
           setLoadingCreate(false);
           fetchRegisteredClasses();
         }, 1500);
+        if (response?.headers?.accesstoken) {
+          localStorage.setItem("accessToken", response.headers.accesstoken);
+        }
       }
-    } catch (error) {
-      console.log(error);
+    } catch (err) {
+      if (err?.response?.status === 401) {
+        setLoadingCreate(false);
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return;
+      }
       setTimeout(() => {
         setError(
-          error.response?.data?.message ||
+          err.response?.data?.message ||
             "Failed to create classroom. Please try again."
         );
         setLoadingCreate(false);
@@ -196,6 +280,12 @@ function Dashboard() {
       {/* Navbar */}
       <Navbar navItems={navItems} logout={true} />
       <div className="h-16"></div>
+      <ErrorPopup
+        visible={errorPopup}
+        errorMessage={
+          "Your login session has been expired. Please login again."
+        }
+      ></ErrorPopup>
       {/* Page Content */}
       <div className="bg-white flex flex-col md:px-20 mt-8 mx-4">
         <div className="flex items-center justify-between mb-6">

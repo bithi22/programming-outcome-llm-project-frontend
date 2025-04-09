@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate, useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
+import ErrorPopup from "../components/ErrorPopUp";
 
-const API_URL = process.env.REACT_APP_API_URL
+const API_URL = process.env.REACT_APP_API_URL;
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
 
 function CoPoMapping() {
@@ -20,12 +21,11 @@ function CoPoMapping() {
   const [popupVisible, setPopupVisible] = useState(false);
 
   const [error, setError] = useState("");
+  const [errorPopup, setErrorPopup] = useState(false);
+
   const navigate = useNavigate();
 
-  const navItems = [
-  ];
-
-  const actionButton = { label: "Logout", path: "/logout" };
+  const navItems = [];
 
   // Transform incoming CO-PO data (if needed) into a shape ready for editing.
   useEffect(() => {
@@ -116,8 +116,18 @@ function CoPoMapping() {
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) {
-        setError("You are not logged in. Please log in first.");
         setIsLoading(false);
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
         return;
       }
 
@@ -138,6 +148,9 @@ function CoPoMapping() {
       );
 
       if (response.data.success) {
+        if (response?.headers?.accesstoken) {
+          localStorage.setItem("accessToken", response.headers.accesstoken);
+        }
         setTimeout(() => {
           setPopupVisible(true);
           setIsLoading(false);
@@ -149,7 +162,7 @@ function CoPoMapping() {
             state: {
               classroom_id,
             },
-            replace : true
+            replace: true,
           });
         }, 3000);
       } else {
@@ -158,9 +171,26 @@ function CoPoMapping() {
           setIsLoading(false);
         }, 1500);
       }
-    } catch (error) {
+    } catch (err) {
+      if (err?.response?.status === 401) {
+        setIsLoading(false);
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return;
+      }
       setTimeout(() => {
-        setError(error.response?.data?.message);
+        setError(
+          err.response?.data?.message || "Some error occured. Please try again."
+        );
         setIsLoading(false);
       }, 1500);
     }
@@ -170,11 +200,19 @@ function CoPoMapping() {
     <div className="flex flex-col bg-white min-h-screen">
       <Navbar navItems={navItems} logout={true} />
       <div className="h-16"></div>
+      <ErrorPopup
+        visible={errorPopup}
+        errorMessage={
+          "Your login session has been expired. Please login again."
+        }
+      ></ErrorPopup>
       {/* Loading Overlay */}
       {isLoading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-500 bg-opacity-50">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-[#2C36CC]"></div>
-          <span className="ml-2 font-inter font-bold text-lg text-white">Please wait...</span>
+          <span className="ml-2 font-inter font-bold text-lg text-white">
+            Please wait...
+          </span>
         </div>
       )}
 
@@ -238,8 +276,12 @@ function CoPoMapping() {
             <thead className="bg-black text-white">
               <tr>
                 <th className="px-4 py-2 border w-32 text-center">CO</th>
-                <th className="px-4 py-2 border w-1/2 text-center">Description</th>
-                <th className="px-4 py-2 border w-60 text-center">Cognitive Domain</th>
+                <th className="px-4 py-2 border w-1/2 text-center">
+                  Description
+                </th>
+                <th className="px-4 py-2 border w-60 text-center">
+                  Cognitive Domain
+                </th>
                 <th className="px-4 py-2 border w-60 text-center">PO</th>
                 <th className="px-4 py-2 border w-24 text-center">Weight</th>
                 <th className="px-4 py-2 border w-24 text-center">Action</th>

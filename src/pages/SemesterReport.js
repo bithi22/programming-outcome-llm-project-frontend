@@ -4,6 +4,8 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import Navbar from "../components/Navbar";
 import BarChart from "../components/BarChart";
+import ErrorPopup from "../components/ErrorPopUp";
+
 
 const API_URL = process.env.REACT_APP_API_URL
 axios.defaults.withCredentials = true;
@@ -18,6 +20,7 @@ function SemesterReport() {
   const [reportData, setReportData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [errorPopup, setErrorPopup] = useState(false);
 
   // Navbar items
   const navItems = [];
@@ -45,13 +48,22 @@ function SemesterReport() {
       return;
     }
 
-
     const token = localStorage.getItem("accessToken");
-    if (!token) {
-      setError("Access token not found.");
-      setLoading(false);
-      return;
-    }
+      if (!token) {
+        setLoading(false)
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return;
+      }
 
     try {
       // POST request with start_date and end_date in the body
@@ -71,6 +83,9 @@ function SemesterReport() {
           setReportData(response.data.data);
           setLoading(false)
         },1500)
+        if(response?.headers?.accesstoken){
+          localStorage.setItem("accessToken", response.headers.accesstoken);
+        }
       } else {
         setTimeout(()=>{
           setError(response.data.message);
@@ -78,9 +93,24 @@ function SemesterReport() {
         },1500)
         
       }
-    } catch (error) {
+    } catch (err) {
+      if (err?.response?.status === 401) {
+        setLoading(false);
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return ;
+      }
       setTimeout(()=>{
-        setError(error.response?.data?.message);
+        setError(err.response?.data?.message || "Some error occured. Please try again.");
         setLoading(false)
       },1500)
       
@@ -209,7 +239,12 @@ function SemesterReport() {
         logout={true}
         />
       <div className="h-16"></div>
-
+      <ErrorPopup
+        visible={errorPopup}
+        errorMessage={
+          "Your login session has been expired. Please login again."
+        }
+      ></ErrorPopup>
       {/* Form Card */}
       <div className="flex justify-between items-center my-4 mx-4 p-4 bg-white rounded-md shadow-md">
         {/* Left Section: Input Form */}

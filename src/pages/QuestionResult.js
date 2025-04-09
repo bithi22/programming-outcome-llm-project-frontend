@@ -5,6 +5,8 @@ import axios from "axios";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { FaBars, FaTimes } from "react-icons/fa";
+import ErrorPopup from "../components/ErrorPopUp";
+
 
 const API_URL = process.env.REACT_APP_API_URL
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
@@ -39,9 +41,9 @@ function QuestionResult() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [addStudentModalError, setAddStudentModalError] = useState("");
+  const [errorPopup, setErrorPopup] = useState(false);
 
   const navItems = [];
-  const actionButton = { label: "Logout", path: "/logout" };
 
   // Download XLSX including the extra Total Marks column.
   const downloadXLSX = () => {
@@ -467,14 +469,21 @@ function QuestionResult() {
       current_record: obtained_marks_mapping,
       question_id: question_id,
     };
-    console.log("Record Saving", requestBody);
     const token = localStorage.getItem("accessToken");
-
     if (!token) {
-      console.error("Access token not found");
+      setErrorPopup(true);
+      setTimeout(() => {
+        // Redirect to Home
+        navigate("/", { replace: true });
+
+        // Prevent back navigation
+        window.history.pushState(null, null, window.location.href);
+        window.onpopstate = () => {
+          window.history.go(1);
+        };
+      }, 3000);
       return;
     }
-
     try {
       setIsLoading(true);
       const response = await axios.put(
@@ -488,6 +497,9 @@ function QuestionResult() {
       );
 
       if (response.status === 200) {
+        if(response?.headers?.accesstoken){
+          localStorage.setItem("accessToken", response.headers.accesstoken);
+        }
         setTimeout(() => {
           setIsLoading(false);
           setPopupVisible(true);
@@ -501,21 +513,47 @@ function QuestionResult() {
           setError(response.data.message);
         }, 1500);
       }
-    } catch (error) {
+    } catch (err) {
+      if (err?.response?.status === 401) {
+        setIsLoading(false);
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return ;
+      }
       setTimeout(() => {
         setIsLoading(false);
-        setError(error?.response?.data?.message);
+        setError(err?.response?.data?.message || "Some error occured. Please try again.");
       }, 1500);
     }
   };
 
   const publishResult = async () => {
     setError("");
+    
     const token = localStorage.getItem("accessToken");
-    if (!token) {
-      console.error("Access token not found");
-      return;
-    }
+      if (!token) {
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return;
+      }
 
     if (question.report_submitted) {
       setError("Report is already submitted.");
@@ -535,6 +573,9 @@ function QuestionResult() {
         { headers: { accessToken: token } }
       );
       if (response.status === 200) {
+        if(response?.headers?.accesstoken){
+          localStorage.setItem("accessToken", response.headers.accesstoken);
+        }
         setTimeout(() => {
           setIsLoading(false);
           setPopupMessage(true);
@@ -547,10 +588,25 @@ function QuestionResult() {
           setError(response.data.message);
         }, 1500);
       }
-    } catch (error) {
+    } catch (err) {
+      if (err?.response?.status === 401) {
+        setIsLoading(false);
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return ;
+      }
       setTimeout(() => {
         setIsLoading(false);
-        setError(error.response?.data?.message);
+        setError(err.response?.data?.message || "Some error occured. Please try again.");
       }, 1500);
     }
   };
@@ -616,11 +672,9 @@ function QuestionResult() {
         }
       });
 
-      console.log(expectedHeader);
 
       // Extract header rows from the uploaded file
       const uploadedHeader = fileData.slice(0, headerRowCount);
-      console.log(uploadedHeader);
 
       // Compare the expected header with the uploaded header
       let headersMatch = true;
@@ -719,6 +773,12 @@ function QuestionResult() {
     <div className="flex flex-col bg-white min-h-screen">
       <Navbar navItems={navItems} logout={true} />
       <div className="h-16"></div>
+      <ErrorPopup
+        visible={errorPopup}
+        errorMessage={
+          "Your login session has been expired. Please login again."
+        }
+      ></ErrorPopup>
       <div className="container mx-auto px-6 mt-8 mb-6">
         {/* Top buttons container without a white bg */}
         <h1 className="text-lg font-inter font-semibold tracking-[-0.04em] text-center">

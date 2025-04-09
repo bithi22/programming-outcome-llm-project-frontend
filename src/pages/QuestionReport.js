@@ -7,6 +7,8 @@ import { useLocation } from "react-router-dom";
 import * as XLSX from "xlsx";
 import BarChart from "../components/BarChart";
 import { motion, AnimatePresence } from "framer-motion";
+import ErrorPopup from "../components/ErrorPopUp";
+
 
 const API_URL = process.env.REACT_APP_API_URL
 
@@ -30,6 +32,7 @@ function QuestionReport() {
   const [students, setStudents] = useState([]);
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [studentsError, setStudentsError] = useState(null);
+  const [errorPopup, setErrorPopup] = useState(false);
 
   // Chart refs (for PDF capture)
   const poChartRef = useRef(null);
@@ -45,9 +48,20 @@ function QuestionReport() {
     const fetchStudents = async () => {
       setStudentsLoading(true);
       setStudentsError(null);
+      
       const token = localStorage.getItem("accessToken");
       if (!token) {
-        setStudentsError("Access token not found.");
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
         return;
       }
       try {
@@ -58,12 +72,30 @@ function QuestionReport() {
         if (response.data.success) {
           const { students } = response.data.data;
           setStudents(students.sort());
+          if(response?.headers?.accesstoken){
+            localStorage.setItem("accessToken", response.headers.accesstoken);
+          }
         } else {
           setStudentsError(response.data.message);
         }
-      } catch (error) {
+      } catch (err) {
+        if (err?.response?.status === 401) {
+          setStudentsLoading(false);
+          setErrorPopup(true);
+          setTimeout(() => {
+            // Redirect to Home
+            navigate("/", { replace: true });
+  
+            // Prevent back navigation
+            window.history.pushState(null, null, window.location.href);
+            window.onpopstate = () => {
+              window.history.go(1);
+            };
+          }, 3000);
+          return ;
+        }
         setStudentsError(
-          error.response?.data?.message || "Error fetching student IDs."
+          err.response?.data?.message || "Error fetching student IDs."
         );
       } finally {
         setTimeout(() => {
@@ -98,11 +130,21 @@ function QuestionReport() {
     }
     setLoading(true);
     const token = localStorage.getItem("accessToken");
-    if (!token) {
-      setError("Access token not found.");
-      setLoading(false);
-      return;
-    }
+      if (!token) {
+        setLoading(false)
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return;
+      }
     try {
       const response = await axios.get(
         `${API_URL}/report/question/${question_id}/${studentId}`,
@@ -114,6 +156,9 @@ function QuestionReport() {
           setViewReportType("student");
           setLoading(false);
         }, 1500);
+        if(response?.headers?.accesstoken){
+          localStorage.setItem("accessToken", response.headers.accesstoken);
+        }
       } else {
         setTimeout(() => {
           setError(response.data.message);
@@ -122,6 +167,22 @@ function QuestionReport() {
         }, 1500);
       }
     } catch (err) {
+      if (err?.response?.status === 401) {
+        setLoading(false);
+        setReportData(null)
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return ;
+      }
       setTimeout(() => {
         setError(err.response?.data?.message || "Error while fetching report.");
         setReportData(null);
@@ -134,12 +195,23 @@ function QuestionReport() {
     setReportData(null);
     setError(null);
     setLoading(true);
+    
     const token = localStorage.getItem("accessToken");
-    if (!token) {
-      setError("Access token not found.");
-      setLoading(false);
-      return;
-    }
+      if (!token) {
+        setLoading(false)
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return;
+      }
     try {
       const response = await axios.get(
         `${API_URL}/report/question/${question_id}/average`,
@@ -151,6 +223,9 @@ function QuestionReport() {
           setViewReportType("average");
           setLoading(false);
         }, 1500);
+        if(response?.headers?.accesstoken){
+          localStorage.setItem("accessToken", response.headers.accesstoken);
+        }
       } else {
         setTimeout(() => {
           setError(response.data.message);
@@ -159,6 +234,22 @@ function QuestionReport() {
         }, 1500);
       }
     } catch (err) {
+      if (err?.response?.status === 401) {
+        setLoading(false);
+        setReportData(null)
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return ;
+      }
       setTimeout(() => {
         setError(err.response?.data?.message || "Error while fetching report.");
         setReportData(null);
@@ -172,11 +263,21 @@ function QuestionReport() {
     setError(null);
     setLoading(true);
     const token = localStorage.getItem("accessToken");
-    if (!token) {
-      setError("Access token not found.");
-      setLoading(false);
-      return;
-    }
+      if (!token) {
+        setLoading(false)
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return;
+      }
     try {
       const response = await axios.get(
         `${API_URL}/report/question/${question_id}/overall`,
@@ -188,6 +289,9 @@ function QuestionReport() {
           setViewReportType("overall");
           setLoading(false);
         }, 1500);
+        if(response?.headers?.accesstoken){
+          localStorage.setItem("accessToken", response.headers.accesstoken);
+        }
       } else {
         setTimeout(() => {
           setError(response.data.message);
@@ -196,6 +300,22 @@ function QuestionReport() {
         }, 1500);
       }
     } catch (err) {
+      if (err?.response?.status === 401) {
+        setLoading(false);
+        setReportData(null)
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return ;
+      }
       setTimeout(() => {
         setError(
           err.response?.data?.message || "Error while fetching overall report."
@@ -411,6 +531,12 @@ function QuestionReport() {
         logout={true}
         />
       <div className="h-16"></div>
+      <ErrorPopup
+        visible={errorPopup}
+        errorMessage={
+          "Your login session has been expired. Please login again."
+        }
+      ></ErrorPopup>
 
       <AnimatePresence mode="wait">
         {studentsLoading ? (

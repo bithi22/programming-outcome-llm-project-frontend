@@ -6,10 +6,11 @@ import Navbar from "../components/Navbar";
 import { useLocation } from "react-router-dom";
 import * as XLSX from "xlsx";
 import BarChart from "../components/BarChart";
+import ErrorPopup from "../components/ErrorPopUp";
 
 import { motion, AnimatePresence } from "framer-motion";
 
-const API_URL = process.env.REACT_APP_API_URL
+const API_URL = process.env.REACT_APP_API_URL;
 axios.defaults.withCredentials = true;
 
 function ClassroomReport() {
@@ -27,6 +28,7 @@ function ClassroomReport() {
 
   const [studentsLoading, setStudentsLoading] = useState(false);
   const [studentsError, setStudentsError] = useState("");
+  const [errorPopup, setErrorPopup] = useState(false);
 
   // New state for student IDs based on role
   const [teacherStudents, setTeacherStudents] = useState([]);
@@ -47,7 +49,6 @@ function ClassroomReport() {
 
   // Navbar setup
   const navItems = [];
-  const actionButton = { label: "Logout", path: "/logout" };
 
   // ------------------------------
   // Fetch student IDs on mount (or when classroom_id changes)
@@ -56,9 +57,20 @@ function ClassroomReport() {
     const fetchStudents = async () => {
       setStudentsLoading(true);
       setStudentsError(null);
+
       const token = localStorage.getItem("accessToken");
       if (!token) {
-        setError("Access token not found.");
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
         return;
       }
       try {
@@ -70,12 +82,29 @@ function ClassroomReport() {
           const { teacher_students, committee_students } = response.data.data;
           setTeacherStudents(teacher_students.sort());
           setCommitteeStudents(committee_students.sort());
+          if (response?.headers?.accesstoken) {
+            localStorage.setItem("accessToken", response.headers.accesstoken);
+          }
         } else {
           setStudentsError(response.data.message);
         }
-      } catch (error) {
+      } catch (err) {
+        if (err?.response?.status === 401) {
+          setErrorPopup(true);
+          setTimeout(() => {
+            // Redirect to Home
+            navigate("/", { replace: true });
+  
+            // Prevent back navigation
+            window.history.pushState(null, null, window.location.href);
+            window.onpopstate = () => {
+              window.history.go(1);
+            };
+          }, 3000);
+          return ;
+        }
         setStudentsError(
-          error.response?.data?.message || "Error fetching student IDs."
+          err.response?.data?.message || "Error fetching student IDs."
         );
       } finally {
         setTimeout(() => {
@@ -111,10 +140,21 @@ function ClassroomReport() {
       return;
     }
     setLoading(true);
+
     const token = localStorage.getItem("accessToken");
     if (!token) {
-      setError("Access token not found.");
       setLoading(false);
+      setErrorPopup(true);
+      setTimeout(() => {
+        // Redirect to Home
+        navigate("/", { replace: true });
+
+        // Prevent back navigation
+        window.history.pushState(null, null, window.location.href);
+        window.onpopstate = () => {
+          window.history.go(1);
+        };
+      }, 3000);
       return;
     }
     try {
@@ -128,6 +168,9 @@ function ClassroomReport() {
           setViewReportType("student");
           setLoading(false);
         }, 1500);
+        if (response?.headers?.accesstoken) {
+          localStorage.setItem("accessToken", response.headers.accesstoken);
+        }
       } else {
         setTimeout(() => {
           setError(response.data.message);
@@ -135,9 +178,27 @@ function ClassroomReport() {
           setLoading(false);
         }, 1500);
       }
-    } catch (error) {
+    } catch (err) {
+      if (err?.response?.status === 401) {
+        setLoading(false);
+        setReportData(null)
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return ;
+      }
       setTimeout(() => {
-        setError(error.response?.data?.message);
+        setError(
+          err.response?.data?.message || "Some error occured. Please try again."
+        );
         setReportData(null);
         setLoading(false);
       }, 1500);
@@ -148,10 +209,21 @@ function ClassroomReport() {
     setReportData(null);
     setError(null);
     setLoading(true);
+
     const token = localStorage.getItem("accessToken");
     if (!token) {
-      setError("Access token not found.");
       setLoading(false);
+      setErrorPopup(true);
+      setTimeout(() => {
+        // Redirect to Home
+        navigate("/", { replace: true });
+
+        // Prevent back navigation
+        window.history.pushState(null, null, window.location.href);
+        window.onpopstate = () => {
+          window.history.go(1);
+        };
+      }, 3000);
       return;
     }
     try {
@@ -165,6 +237,9 @@ function ClassroomReport() {
           setViewReportType("average");
           setLoading(false);
         }, 1500);
+        if (response?.headers?.accesstoken) {
+          localStorage.setItem("accessToken", response.headers.accesstoken);
+        }
       } else {
         setTimeout(() => {
           setError(response.data.message);
@@ -172,9 +247,27 @@ function ClassroomReport() {
           setLoading(false);
         }, 1500);
       }
-    } catch (error) {
+    } catch (err) {
+      if (err?.response?.status === 401) {
+        setLoading(false);
+        setReportData(null)
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return ;
+      }
       setTimeout(() => {
-        setError(error.response?.data?.message);
+        setError(
+          err.response?.data?.message || "Some error occured. Please try again."
+        );
         setReportData(null);
         setLoading(false);
       }, 1500);
@@ -185,10 +278,21 @@ function ClassroomReport() {
     setReportData(null);
     setError(null);
     setLoading(true);
+
     const token = localStorage.getItem("accessToken");
     if (!token) {
-      setError("Access token not found.");
       setLoading(false);
+      setErrorPopup(true);
+      setTimeout(() => {
+        // Redirect to Home
+        navigate("/", { replace: true });
+
+        // Prevent back navigation
+        window.history.pushState(null, null, window.location.href);
+        window.onpopstate = () => {
+          window.history.go(1);
+        };
+      }, 3000);
       return;
     }
     try {
@@ -202,6 +306,9 @@ function ClassroomReport() {
           setReportData(response.data.data);
           setLoading(false);
         }, 1500);
+        if (response?.headers?.accesstoken) {
+          localStorage.setItem("accessToken", response.headers.accesstoken);
+        }
       } else {
         setTimeout(() => {
           setError(response.data.message);
@@ -209,11 +316,25 @@ function ClassroomReport() {
           setLoading(false);
         }, 1500);
       }
-    } catch (error) {
+    } catch (err) {
+      if (err?.response?.status === 401) {
+        setLoading(false);
+        setReportData(null)
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return ;
+      }
       setTimeout(() => {
-        setError(
-          error.response?.data?.message || "Error while fetching report."
-        );
+        setError(err.response?.data?.message || "Error while fetching report.");
         setReportData(null);
         setLoading(false);
       }, 1500);
@@ -424,7 +545,12 @@ function ClassroomReport() {
       {/* Navbar */}
       <Navbar navItems={navItems} logout={true} />
       <div className="h-16"></div>
-
+      <ErrorPopup
+        visible={errorPopup}
+        errorMessage={
+          "Your login session has been expired. Please login again."
+        }
+      ></ErrorPopup>
       <AnimatePresence mode="wait">
         {studentsLoading ? (
           <div className="container mx-auto px-6 mt-8">

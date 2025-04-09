@@ -4,8 +4,9 @@ import axios from "axios";
 import Navbar from "../components/Navbar";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaBars, FaTimes } from "react-icons/fa";
+import ErrorPopup from "../components/ErrorPopUp";
 
-const API_URL = process.env.REACT_APP_API_URL
+const API_URL = process.env.REACT_APP_API_URL;
 
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
 
@@ -25,6 +26,7 @@ function QuestionDisplay() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingUpdate, setLoadingUpdate] = useState(false);
   const [loadingUpdateError, setLoadingUpdateError] = useState("");
+  const [errorPopup, setErrorPopup] = useState(false);
 
   // New state for mobile hamburger menus
   const [mobileMenuGroup1Open, setMobileMenuGroup1Open] = useState(false);
@@ -54,26 +56,51 @@ function QuestionDisplay() {
       try {
         const token = localStorage.getItem("accessToken");
         if (!token) {
-          setError("You are not logged in. Please log in first.");
+          setErrorPopup(true);
+          setTimeout(() => {
+            // Redirect to Home
+            navigate("/", { replace: true });
+
+            // Prevent back navigation
+            window.history.pushState(null, null, window.location.href);
+            window.onpopstate = () => {
+              window.history.go(1);
+            };
+          }, 3000);
           return;
         }
 
-        const response = await axios.get(
-          `${API_URL}/question/${question_id}`,
-          {
-            headers: {
-              accessToken: token,
-            },
-          }
-        );
+        const response = await axios.get(`${API_URL}/question/${question_id}`, {
+          headers: {
+            accessToken: token,
+          },
+        });
+        if(response?.headers?.accesstoken){
+          localStorage.setItem("accessToken", response.headers.accesstoken);
+        }
         setTimeout(() => {
           setIsLoading(false);
           setQuestion(response.data.data);
         }, 1500);
-      } catch (error) {
+      } catch (err) {
+        if (err?.response?.status === 401) {
+          setIsLoading(false);
+          setErrorPopup(true);
+          setTimeout(() => {
+            // Redirect to Home
+            navigate("/", { replace: true });
+  
+            // Prevent back navigation
+            window.history.pushState(null, null, window.location.href);
+            window.onpopstate = () => {
+              window.history.go(1);
+            };
+          }, 3000);
+          return ;
+        }
         setTimeout(() => {
           setIsLoading(false);
-          setError(error.response?.data?.message);
+          setError(err.response?.data?.message || "Some error occured. Please try again.");
         }, 1500);
       }
     };
@@ -371,6 +398,20 @@ function QuestionDisplay() {
     setLoadingUpdate(true);
     try {
       const token = localStorage.getItem("accessToken");
+      if (!token) {
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return;
+      }
       const payload = {
         name: editedName,
         weight: editedWeight,
@@ -384,6 +425,9 @@ function QuestionDisplay() {
           headers: { accessToken: token },
         }
       );
+      if(response?.headers?.accesstoken){
+        localStorage.setItem("accessToken", response.headers.accesstoken);
+      }
       // Update the question state with edited values
       setTimeout(() => {
         setQuestion({
@@ -395,11 +439,27 @@ function QuestionDisplay() {
         setIsEditing(false);
         setLoadingUpdate(false);
       }, 1500);
-    } catch (error) {
+    } catch (err) {
+      if (err?.response?.status === 401) {
+        setIsEditing(false)
+        setLoadingUpdate(false)
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+        return ;
+      }
       setTimeout(() => {
         setIsEditing(false);
         setLoadingUpdate(false);
-        setLoadingUpdateError(error.response?.data?.message);
+        setLoadingUpdateError(err.response?.data?.message || "Some error occured. Please try again.");
       }, 1500);
     }
   };
@@ -416,7 +476,12 @@ function QuestionDisplay() {
     <div className="flex flex-col bg-white min-h-screen overflow-x-hidden">
       <Navbar navItems={navItems} logout={true} />
       <div className="h-16"></div>
-
+      <ErrorPopup
+        visible={errorPopup}
+        errorMessage={
+          "Your login session has been expired. Please login again."
+        }
+      ></ErrorPopup>
       <AnimatePresence mode="wait">
         {isLoading ? (
           <div className="container mx-auto px-6 mt-8 mb-6">
@@ -688,8 +753,12 @@ function QuestionDisplay() {
                   <table className="table-auto w-full text-left border border-gray-300">
                     <thead className="bg-black text-white">
                       <tr>
-                        <th className="px-4 py-2 border text-center">Question</th>
-                        <th className="px-4 py-2 border text-center">Mapped PO</th>
+                        <th className="px-4 py-2 border text-center">
+                          Question
+                        </th>
+                        <th className="px-4 py-2 border text-center">
+                          Mapped PO
+                        </th>
                         <th className="px-4 py-2 border text-center">
                           Mapped Cognitive Domain
                         </th>

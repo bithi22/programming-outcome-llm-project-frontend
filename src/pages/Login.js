@@ -30,12 +30,22 @@ function Login() {
     return emailRegex.test(email);
   };
 
+
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-      navigate("/dashboard");
-    }
+    const checkAccessTokenValidity = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        if (token) {
+          await axios.get(`${API_URL}/auth/`, {
+            headers: { accessToken: token },
+          });
+          navigate("/dashboard");
+        }
+      } catch (err) {}
+    };
+    checkAccessTokenValidity();
   }, []);
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();

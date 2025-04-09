@@ -5,7 +5,6 @@ import Signin from './pages/Login';
 import DashBoard from './pages/Dashboard';
 import EmailVerification from './pages/VerifyEmail';
 import Classroom from './pages/Classroom';
-import QuestionBuilder from './pages/QuestionBuilder';
 import QuestionCoPo from './pages/QuestionCoPO';
 import QuestionResult from './pages/QuestionResult';
 import AllQuestions from './pages/AllQuestions';
@@ -29,7 +28,6 @@ function App() {
         <Route path="/dashboard" element={<DashBoard />} />
         <Route path="/emailVerification" element={<EmailVerification/>}/>
         <Route path ="/classroom" element={<Classroom/>}/>
-        <Route path="/questionbuilder" element={<QuestionBuilder/>}/>
         <Route path="/questioncopomapping" element={<QuestionCoPo/>}/>
         <Route path="/questionresult" element={<QuestionResult/>}/>
         <Route path="/allquestions" element={<AllQuestions/>}/>

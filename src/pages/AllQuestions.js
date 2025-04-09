@@ -4,9 +4,10 @@ import axios from "axios";
 import Navbar from "../components/Navbar";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaBars, FaTimes } from "react-icons/fa"; // <-- Imported icons
+import ErrorPopup from "../components/ErrorPopUp";
 
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
-const API_URL = process.env.REACT_APP_API_URL
+const API_URL = process.env.REACT_APP_API_URL;
 
 function AllQuestions() {
   const [questions, setQuestions] = useState([]);
@@ -18,6 +19,7 @@ function AllQuestions() {
   const [file, setFile] = useState(null);
   const [mappingLoading, setMappingLoading] = useState(false);
   const [mappingError, setMappingError] = useState(false);
+  const [errorPopup, setErrorPopup] = useState(false);
 
   // New state for mobile menu toggling
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -42,24 +44,52 @@ function AllQuestions() {
       try {
         const token = localStorage.getItem("accessToken");
         if (!token) {
-          setError("You are not logged in. Please log in first.");
           setLoading(false);
+          setErrorPopup(true);
+          setTimeout(() => {
+            // Redirect to Home
+            navigate("/", { replace: true });
+
+            // Prevent back navigation
+            window.history.pushState(null, null, window.location.href);
+            window.onpopstate = () => {
+              window.history.go(1);
+            };
+          }, 3000);
           return;
         }
-
         const response = await axios.get(
           `${API_URL}/classroom/questions/${classroom_id}`,
           {
             headers: {
               accessToken: token,
-              'ngrok-skip-browser-warning': '69420',
-              'Content-Type': 'application/json',
             },
           }
         );
         setQuestions(response.data.data || []);
+        if(response?.headers?.accesstoken){
+          localStorage.setItem("accessToken", response.headers.accesstoken);
+        }
       } catch (err) {
-        setError("Failed to fetch questions. Please try again.");
+        if (err?.response?.status === 401) {
+          setLoading(false);
+          setErrorPopup(true);
+          setTimeout(() => {
+            // Redirect to Home
+            navigate("/", { replace: true });
+
+            // Prevent back navigation
+            window.history.pushState(null, null, window.location.href);
+            window.onpopstate = () => {
+              window.history.go(1);
+            };
+          }, 3000);
+        } else {
+          setError(
+            err?.response?.data?.message ||
+              "Failed to fetch questions. Please try again."
+          );
+        }
       } finally {
         setTimeout(() => {
           setLoading(false);
@@ -80,20 +110,32 @@ function AllQuestions() {
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) {
-        setError("You are not logged in. Please log in first.");
         setLoading(false);
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
         return;
       }
-      const response = await axios.get(
-        `${API_URL}/question/template`,
-        {
-          params: { file_type: fileType },
-          responseType: "blob",
-          headers: {
-            accessToken: token,
-          },
-        }
-      );
+
+      const response = await axios.get(`${API_URL}/question/template`, {
+        params: { file_type: fileType },
+        responseType: "blob",
+        headers: {
+          accessToken: token,
+        },
+      });
+
+      if(response?.headers?.accesstoken){
+        localStorage.setItem("accessToken", response.headers.accesstoken);
+      }
 
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const a = document.createElement("a");
@@ -102,9 +144,27 @@ function AllQuestions() {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-    } catch (error) {
-      console.error("Error downloading file:", error);
-      alert("Error downloading file. Please try again.");
+    } catch (err) {
+      if (err?.response?.status === 401) {
+        setLoading(false);
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+      } else {
+        setLoading(false)
+        setError(
+          err?.response?.data?.message ||
+            "Failed to fetch questions. Please try again."
+        );
+      }
     }
   };
 
@@ -136,7 +196,7 @@ function AllQuestions() {
   };
 
   const handleGetCoPoMapping = async () => {
-    setMappingError('')
+    setMappingError("");
     if (!questionName || !weight || !file) {
       setMappingError("Please fill in all the fields.");
       return;
@@ -145,9 +205,21 @@ function AllQuestions() {
     try {
       const token = localStorage.getItem("accessToken");
       if (!token) {
-        setError("You are not logged in. Please log in first.");
+        setLoading(false);
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
         return;
       }
+
 
       setMappingLoading(true); // Start loader
 
@@ -179,12 +251,34 @@ function AllQuestions() {
             },
           });
         }, 1500);
+        if(response?.headers?.accesstoken){
+          localStorage.setItem("accessToken", response.headers.accesstoken);
+        }
       }
-    } catch (error) {
-      setTimeout(() => {
-        setMappingError(error.response?.data?.message || "Some error occured. Please try again.");
-        setMappingLoading(false);
-      }, 1500);
+    } catch (err) {
+      if (err?.response?.status === 401) {
+        setLoading(false);
+        setErrorPopup(true);
+        setTimeout(() => {
+          // Redirect to Home
+          navigate("/", { replace: true });
+
+          // Prevent back navigation
+          window.history.pushState(null, null, window.location.href);
+          window.onpopstate = () => {
+            window.history.go(1);
+          };
+        }, 3000);
+      } else {
+        setLoading(false)
+        setTimeout(() => {
+          setMappingError(
+            err.response?.data?.message ||
+              "Some error occured. Please try again."
+          );
+          setMappingLoading(false);
+        }, 1500);
+      }
     }
   };
 
@@ -192,7 +286,12 @@ function AllQuestions() {
     <div className="flex flex-col bg-white min-h-screen overflow-x-hidden">
       <Navbar navItems={navItems} logout={true} />
       <div className="h-16"></div>
-
+      <ErrorPopup
+        visible={errorPopup}
+        errorMessage={
+          "Your login session has been expired. Please login again."
+        }
+      ></ErrorPopup>
       <div className="flex flex-col ml-2 mr-2 md:mx-20 px-6 mt-8 ">
         <div className="flex items-center justify-between mb-6 ">
           {/* Title with fixed width */}
@@ -405,8 +504,8 @@ function AllQuestions() {
                   if (isNaN(newVal) || newVal < 1) {
                     newVal = 1;
                   }
-                  if(newVal>100){
-                    newVal = 100
+                  if (newVal > 100) {
+                    newVal = 100;
                   }
                   setWeight(newVal);
                 }}

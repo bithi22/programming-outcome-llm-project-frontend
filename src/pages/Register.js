@@ -5,7 +5,7 @@ import Navbar from "../components/Navbar";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 import GoogleAuth from "../components/GoogleAuth";
 
-const API_URL = process.env.REACT_APP_API_URL
+const API_URL = process.env.REACT_APP_API_URL;
 axios.defaults.withCredentials = true; // Enables sending cookies with every request
 
 function Register() {
@@ -37,16 +37,22 @@ function Register() {
     return emailRegex.test(email);
   };
 
-  useEffect(()=>{
-    const token = localStorage.getItem('accessToken');
+  useEffect(() => {
+    const checkAccessTokenValidity = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
         if (token) {
-          navigate("/dashboard")
+          await axios.get(`${API_URL}/auth/`, {
+            headers: { accessToken: token },
+          });
+          navigate("/dashboard");
         }
-
-  },[])
+      } catch (err) {}
+    };
+    checkAccessTokenValidity();
+  }, []);
 
   const handleSubmit = async (e) => {
-    console.log(API_URL)
     e.preventDefault();
 
     // Reset errors on each click to reflect current field status
@@ -91,7 +97,6 @@ function Register() {
 
     setLoading(true);
     try {
-      console.log(`${API_URL}/auth/register`)
       const requestBody = { email, password };
       const response = await axios.post(
         `${API_URL}/auth/register`,
@@ -118,7 +123,6 @@ function Register() {
         }, 1500);
       } else {
         setTimeout(() => {
-          console.log(error)
           setGlobalError("An unexpected error occurred. Please try again.");
           setLoading(false);
         }, 1500);
@@ -152,7 +156,10 @@ function Register() {
         {/* Card container with margin-top to maintain spacing */}
         <div className="flex flex-col bg-white shadow-lg rounded-xl p-8 w-11/12 max-w-sm md:max-w-md mt-4 mb-4 z-20">
           <h2 className="text-2xl font-bold mb-2 text-left">
-            Register to <span className="font-serif font-bold">OBE<span className="text-blue-500">lytics</span></span>
+            Register to{" "}
+            <span className="font-serif font-bold">
+              OBE<span className="text-blue-500">lytics</span>
+            </span>
           </h2>
           <p className="text-black mb-2 text-left">
             Register to automate Outcome Based Education.
